@@ -1,0 +1,2 @@
+,Name,topk_metric_agg,bottomk_metric_agg,topk_or_bottomk_metric_agg,top1_metric_agg,bottom1_metric_agg,top1_or_bottom1_metric_agg,delta_accuracy,delta_accuracy_neighborhood,neighborhood_score,rewrite_score,paraphrase_score
+0,llava-v1.5-7b_FT_outputs_zsre_editing_sweep_ws-[1]_layer-7_fact-erasure_no_margin_no_entropy_hp__n500_top-4_lowrank-False.csv,0.3029045643153527,0.016597510373443983,0.31742738589211617,0.006224066390041493,0.016597510373443983,0.022821576763485476,0.0014522821576763458,0.0019380227886451958,0.9841638126013075,0.9607068659299849,0.9607068659299849
