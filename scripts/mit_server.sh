@@ -69,4 +69,4 @@ args="
     --lft_edit
 "
 
-CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm ${args}
+CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm_parap ${args}
