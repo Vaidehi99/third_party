@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-04 21:39:51
+ # @LastEditTime: 2024-04-04 22:58:15
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -15,7 +15,7 @@ export HOME=/data1/tianlong
 
 gpu_id=3
 
-layers_wb_attack="22 23 24 25 26 27 28 29 30 31 32"
+layers_wb_attack=
 
 args=" 
     -n 600
@@ -32,7 +32,7 @@ args="
     --fact_erasure
     --overwrite
     --attack pd
-    --layers_wb_attack $layers_wb_attack
+    --layers_wb_attack '22 23 24 25 26 27 28 29 30 31 32'
     --k 2
     --retain_rate
     --skip_generation_tests 
