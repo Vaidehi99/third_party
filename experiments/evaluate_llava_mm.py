@@ -1575,7 +1575,7 @@ if __name__ == "__main__":
     hparams_class, _ = ALG_DICT[alg_name]
     ds_name = args.ds_name
     window_sizes = [int(x) for x in args.window_sizes.split()]
-    layers_wb_attack = [int(x) for x in args.layers_wb_attack.split()]
+    layers_wb_attack = [int(x) for x in args.layers_wb_attack.split(',')]
 
     if 'gpt2' in model_name:
         central_layers = list(range(0, 48, 4)) + [17, 47]

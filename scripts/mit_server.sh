@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-04 23:11:15
+ # @LastEditTime: 2024-04-04 23:12:24
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -15,7 +15,7 @@ export HOME=/data1/tianlong
 
 gpu_id=3
 
-layers_wb_attack="22 23 24 25 26 27 28 29 30 31 32"
+layers_wb_attack="22,23,24,25,26,27,28,29,30,31,32"
 
 args=" 
     -n 600
