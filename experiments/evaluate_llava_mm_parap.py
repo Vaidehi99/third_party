@@ -46,10 +46,10 @@ from PIL import Image
 from util.fewshot_utils import do_low_rank
 from tqdm import tqdm
 
-from transformer_utils.src.transformer_utils.util.module_utils import get_child_module_by_names
+from transformer_utils.util.module_utils import get_child_module_by_names
 from experiments.evaluate_llava_mm import get_image_path
-sys.path.append("/nas-ssd2/vaidehi/nlp13/")
-from LORA.lora_ft import easy_fine_tuning, get_lora_sample_data
+# sys.path.append("/nas-ssd2/vaidehi/nlp13/")
+# from LORA.lora_ft import easy_fine_tuning, get_lora_sample_data
 
 
 ALG_DICT = {
@@ -71,9 +71,9 @@ DS_DICT = {
 # BASE_DIR='/home/peter/private/belief-localization'
 # MODEL_DIR='/playpen/peter/models'
 
-CODE_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization/third_party'
-BASE_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization'
-MODEL_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization/models'
+# CODE_DIR='.'
+# BASE_DIR='..'
+# MODEL_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization/models'
 
 # rephrases = pickle.load(open("/playpen2/vaidehi/belief-localization/third_party/data/parap_all_new.pkl","rb"))
 prefixes = ["", "A new study suggests. ", "The following is a. ", "I've always been. ", "The following blog post. "]
@@ -424,7 +424,7 @@ def ROME_experiment_name(args, model_name, alg_name, ds_name, hparams_to_add):
 
 def ROME_experiment_name_from_override_params(args, model_name, alg_name, ds_name, override_hparams, hparams_class):
   _model_name = model_name.replace('/', '_')
-  params_path = os.path.join(f'{CODE_DIR}/hparams/', alg_name, f"{_model_name}.json")
+  params_path = os.path.join(f'hparams/', alg_name, f"{_model_name}.json")
   if alg_name == 'FT':
     params_path = params_path.replace('.json', '_constr.json')
   hparams = hparams_class.from_json(params_path)
@@ -440,7 +440,7 @@ def ROME_experiment_name_from_override_params(args, model_name, alg_name, ds_nam
   return exp_name
 
 def make_editing_results_df(exp_name, n, case_ids_exec):
-  run_dir = os.path.join(f'{BASE_DIR}/results/', exp_name)
+  run_dir = os.path.join(f'results/', exp_name)
   dataframes = []
   printed = 0
   # import pdb; pdb.set_trace()
@@ -641,7 +641,7 @@ def main(
 
     # Get run hyperparameters
     _model_name = model_name.replace('/', '_')
-    params_path = os.path.join(f'{CODE_DIR}/hparams/', alg_name, f"{_model_name}.json")
+    params_path = os.path.join(f'hparams/', alg_name, f"{_model_name}.json")
     if alg_name == 'FT':
       params_path = params_path.replace('.json', '_constr.json')
     hparams = params_class.from_json(params_path)
@@ -658,7 +658,7 @@ def main(
                                     alg_name,
                                     ds_name,
                                     important_hparams)
-    run_dir = f'{BASE_DIR}/results/{exp_name}'
+    run_dir = f'results/{exp_name}'
     os.makedirs(run_dir, exist_ok=True)
     print(f"Results will be stored at {run_dir}")
     # copy hparams to results dir
@@ -1634,7 +1634,7 @@ if __name__ == "__main__":
         mem_usage = True
         print("Loading model...")
         if '20b' not in model_name:
-            mt = ModelAndTokenizer(model_name, low_cpu_mem_usage=mem_usage, torch_dtype=torch_dtype, cache_dir=MODEL_DIR)
+            mt = ModelAndTokenizer(model_name, low_cpu_mem_usage=mem_usage, torch_dtype=torch_dtype)
             torch.cuda.empty_cache()
             mt.model.eval().cuda()
             mt.tokenizer.add_special_tokens({'pad_token' : mt.tokenizer.eos_token})
@@ -1722,7 +1722,7 @@ if __name__ == "__main__":
     sweep_params = {'ws': window_sizes, 'layers': args.edit_layer}
     ovr_exp_name = sweep_experiment_name(args, _model_name, alg_name, ds_name, sweep_params)
     file_name = f'{ovr_exp_name}.csv'
-    save_path = f'{BASE_DIR}/results/{file_name}'
+    save_path = f'results/{file_name}'
     results_df.to_csv(save_path, index=False)
 
     print(f"saving csv at {save_path}...")
