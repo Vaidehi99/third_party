@@ -26,9 +26,9 @@ from util.runningstats import Covariance, tally
 import sys
 import os
 #os.environ['CUDA_VISIBLE_DEVICES'] = '1'
-os.environ['TRANSFORMERS_CACHE'] = '/nas-ssd2/vaidehi/MMMEdit/cache/'
-os.environ['HF_HOME'] = '/nas-ssd2/vaidehi/MMMEdit/cache/'
-os.environ['HF_DATASETS_CACHE'] = '/nas-ssd2/vaidehi/MMMEdit/cache/'
+# os.environ['TRANSFORMERS_CACHE'] = '/nas-ssd2/vaidehi/MMMEdit/cache/'
+# os.environ['HF_HOME'] = '/nas-ssd2/vaidehi/MMMEdit/cache/'
+# os.environ['HF_DATASETS_CACHE'] = '/nas-ssd2/vaidehi/MMMEdit/cache/'
 # sys.path.append("/nas-ssd2/vaidehi/projects/LLaVA/")
 #from llava.model.builder import load_pretrained_model
 #from llava.mm_utils import get_model_name_from_path
