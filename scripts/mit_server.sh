@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-04 23:26:40
+ # @LastEditTime: 2024-04-04 23:37:46
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -43,6 +43,8 @@ args="
     --img_attack_parap orig 
     --window_sizes 1 
     --cft_edit
+    --skip_generation_tests
+
 "
 
 CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm ${args}
