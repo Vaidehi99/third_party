@@ -1544,7 +1544,7 @@ if __name__ == "__main__":
         mem_usage = True
         print("Loading model...")
         if '20b' not in model_name:
-            mt = ModelAndTokenizer(model_name, low_cpu_mem_usage=mem_usage, torch_dtype=torch_dtype, cache_dir=MODEL_DIR)
+            mt = ModelAndTokenizer(model_name, low_cpu_mem_usage=mem_usage, torch_dtype=torch_dtype)
             torch.cuda.empty_cache()
             mt.model.eval().cuda()
             mt.tokenizer.add_special_tokens({'pad_token' : mt.tokenizer.eos_token})
