@@ -80,15 +80,11 @@ DS_DICT = {
     # "zsre": (MENDQADataset, compute_rewrite_quality_zsre),
 }
 
-# CODE_DIR='/home/peter/private/belief-localization/third_party'
-# BASE_DIR='/home/peter/private/belief-localization'
-# MODEL_DIR='/playpen/peter/models'
+
 
 sys_prompt = "A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions. USER: <image>\n{} ASSISTANT:"
 sys_prompt_pred = "A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions. USER:  \n{} ASSISTANT: "
-# CODE_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization/third_party'
-# BASE_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization'
-# MODEL_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization/models'
+
 
 # valid_ids = pickle.load(open("/nas-ssd2/vaidehi/nlp13/belief-localization/third_party/data/valid_ids_llava_rome.pkl","rb"))
 retain_rate_samples = json.load(open("data/zsre_mend_eval.json","rb"))
@@ -731,7 +727,7 @@ def main(
                                     alg_name,
                                     ds_name,
                                     important_hparams)
-    run_dir = f'{BASE_DIR}/results/{exp_name}'
+    run_dir = f'results/{exp_name}'
     os.makedirs(run_dir, exist_ok=True)
     print(f"Results will be stored at {run_dir}")
     # copy hparams to results dir
