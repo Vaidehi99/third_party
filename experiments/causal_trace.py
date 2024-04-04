@@ -523,22 +523,22 @@ class ModelAndTokenizer:
                 from llava.eval.run_llava import eval_model
                 model_path = "liuhaotian/llava-v1.5-7b"
                 tokenizer, model, image_processor, context_len = load_pretrained_model(
-    model_path=model_path,
-    model_base=None,
-    model_name=get_model_name_from_path(model_path),
-    cache_dir = '/nas-ssd2/vaidehi/MMMEdit/cache/'
-)
+                    model_path=model_path,
+                    model_base=None,
+                    model_name=get_model_name_from_path(model_path),
+                    # cache_dir = '/nas-ssd2/vaidehi/MMMEdit/cache/'
+                )
                 nethook.set_requires_grad(False, model)
                 # model.eval().cuda()
                 print(model)
                 print(tokenizer)
                 print("loaded")
             else:
-            	tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=hf_token)
+                tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=hf_token)
         if model is None:
             assert model_name is not None
             model = AutoModelForCausalLM.from_pretrained(
-                model_name, low_cpu_mem_usage=low_cpu_mem_usage, torch_dtype=torch_dtype, cache_dir='/nas-ssd2/vaidehi/MMMEdit/cache/', token=hf_token)
+                model_name, low_cpu_mem_usage=low_cpu_mem_usage, torch_dtype=torch_dtype, token=hf_token)
             nethook.set_requires_grad(False, model)
             model.eval().cuda()
         self.tokenizer = tokenizer
