@@ -492,7 +492,7 @@ def ROME_experiment_name_from_override_params(args, model_name, alg_name, ds_nam
   return exp_name
 
 def make_editing_results_df(exp_name, n, case_ids_exec):
-  run_dir = os.path.join(f'{BASE_DIR}/results/', exp_name)
+  run_dir = os.path.join(f'results/', exp_name)
   dataframes = []
   printed = 0
   # import pdb; pdb.set_trace()
@@ -1634,7 +1634,7 @@ if __name__ == "__main__":
     sweep_params = {'ws': window_sizes, 'layers': args.edit_layer}
     ovr_exp_name = sweep_experiment_name(args, _model_name, alg_name, ds_name, sweep_params)
     file_name = f'{ovr_exp_name}.csv'
-    save_path = f'{BASE_DIR}/results/{file_name}'
+    save_path = f'results/{file_name}'
     results_df.to_csv(save_path, index=False)
 
     print(f"saving csv at {save_path}...")
