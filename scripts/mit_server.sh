@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-04 23:29:24
+ # @LastEditTime: 2024-04-04 23:26:40
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -12,6 +12,7 @@
 
 export TRANSFORMERS_CACHE=/data1/tianlong/cache/
 export HOME=/data1/tianlong
+
 
 gpu_id=3
 
