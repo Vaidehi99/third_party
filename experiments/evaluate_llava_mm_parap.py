@@ -987,12 +987,12 @@ def main(
 
             '''  
             # import pdb; pdb.set_trace()
-            torch.save(model.state_dict(), "/nas-ssd2/vaidehi/MMMEdit/data/model_preeedit.pt")
-            state_dict = model.state_dict()
-            additional_params_to_be_copied = ["model.embed_tokens.weight", "lm_head.weight"]
-            params_copy = {}
-            for param in additional_params_to_be_copied:
-                params_copy[param] = state_dict[param]
+            # torch.save(model.state_dict(), "/nas-ssd2/vaidehi/MMMEdit/data/model_preeedit.pt")
+            # state_dict = model.state_dict()
+            # additional_params_to_be_copied = ["model.embed_tokens.weight", "lm_head.weight"]
+            # params_copy = {}
+            # for param in additional_params_to_be_copied:
+            #     params_copy[param] = state_dict[param]
 
             with torch.enable_grad(), nethook.TraceDict(model, [embed_layername], edit_output=noise_embeddings_f) if args.fact_forcing else nullcontext() as td:
             
@@ -1024,10 +1024,10 @@ def main(
                 print("Executing edit method: LORA fine-tuning")
                 defense = "fact_erasure"
                 lft_data = get_lora_sample_data(request)
-                edited_model, weights_copy = easy_fine_tuning(model, tok, image_processor, defense, sample_data=lft_data, image_folder=".", learning_rate=2e-2, num_train_epochs=3, bf16=False)
+                edited_model, weights_copy = easy_fine_tuning(model, tok, image_processor, defense, sample_data=lft_data, image_folder=".", learning_rate=1e-2, num_train_epochs=5, bf16=False)
               
 
-              torch.save(model.state_dict(), "/nas-ssd2/vaidehi/MMMEdit/data/model_posteedit.pt")
+            #   torch.save(model.state_dict(), "/nas-ssd2/vaidehi/MMMEdit/data/model_posteedit.pt")
        
                       
 
@@ -1274,7 +1274,7 @@ def main(
                 # for k, v in params_copy.items():
                 #     nethook.get_parameter(model, k)[...] = v.to("cuda")
 
-                torch.save(model.state_dict(), "/nas-ssd2/vaidehi/MMMEdit/data/model_post_preeedit.pt")
+                # torch.save(model.state_dict(), "/nas-ssd2/vaidehi/MMMEdit/data/model_post_preeedit.pt")
 
                
                 

@@ -548,6 +548,7 @@ def score_from_batch(model, batch, return_log_probs=False):
   # print(target_mask)
   # exit()  
   print(model_batch['input_ids'].shape)
+ 
   logits = model(**model_batch).logits
 
 
