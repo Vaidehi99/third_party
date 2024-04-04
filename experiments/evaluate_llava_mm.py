@@ -90,8 +90,8 @@ CODE_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization/third_party'
 BASE_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization'
 MODEL_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization/models'
 
-valid_ids = pickle.load(open("/nas-ssd2/vaidehi/nlp13/belief-localization/third_party/data/valid_ids_llava_rome.pkl","rb"))
-retain_rate_samples = json.load(open("/nas-ssd2/vaidehi/nlp13/belief-localization/third_party/data/zsre_mend_eval.json","rb"))
+# valid_ids = pickle.load(open("/nas-ssd2/vaidehi/nlp13/belief-localization/third_party/data/valid_ids_llava_rome.pkl","rb"))
+retain_rate_samples = json.load(open("data/zsre_mend_eval.json","rb"))
 
 def pad_sequence_to_max_length(sequence, max_length, padding_value=2):
         """Pad a sequence to the desired max length."""
