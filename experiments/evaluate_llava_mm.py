@@ -834,6 +834,7 @@ def main(
                 #    n_gen_per_prompt=5,
                 #    max_out_len=100,
                 #)
+                print(essence_prompt)
                 inputs = tok([essence_prompt], padding=True, return_tensors="pt").to(device)#.cuda()#to(next(model.parameters()).device)
                 essence_texts = model.generate(**inputs, max_new_tokens=100, num_return_sequences=5, do_sample=True, top_k=5)
                 essence_texts = list(tok.batch_decode(essence_texts, skip_special_tokens=True))
