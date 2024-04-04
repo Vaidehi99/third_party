@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-04 21:37:42
+ # @LastEditTime: 2024-04-04 21:39:51
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -44,4 +44,4 @@ args="
     --cft_edit
 "
 
-CUDA_VISIBLE_DEVICES="0" python3 -m -u experiments.evaluate_llava_mm ${args}
+CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm ${args}
