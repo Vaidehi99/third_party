@@ -86,9 +86,9 @@ DS_DICT = {
 
 sys_prompt = "A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions. USER: <image>\n{} ASSISTANT:"
 sys_prompt_pred = "A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions. USER:  \n{} ASSISTANT: "
-CODE_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization/third_party'
-BASE_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization'
-MODEL_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization/models'
+# CODE_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization/third_party'
+# BASE_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization'
+# MODEL_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization/models'
 
 # valid_ids = pickle.load(open("/nas-ssd2/vaidehi/nlp13/belief-localization/third_party/data/valid_ids_llava_rome.pkl","rb"))
 retain_rate_samples = json.load(open("data/zsre_mend_eval.json","rb"))
@@ -714,7 +714,7 @@ def main(
 
     # Get run hyperparameters
     _model_name = model_name.replace('/', '_')
-    params_path = os.path.join(f'{CODE_DIR}/hparams/', alg_name, f"{_model_name}.json")
+    params_path = os.path.join(f'hparams/', alg_name, f"{_model_name}.json")
     if alg_name == 'FT':
       params_path = params_path.replace('.json', '_constr.json')
     hparams = params_class.from_json(params_path)
