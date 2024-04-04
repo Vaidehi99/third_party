@@ -58,7 +58,8 @@ from llava.constants import (
     IMAGE_PLACEHOLDER,
 )
 
-from transformer_utils.src.transformer_utils.util.module_utils import get_child_module_by_names
+# from transformer_utils.src.transformer_utils.util.module_utils import get_child_module_by_names
+from transformer_utils.util.module_utils import get_child_module_by_names
 sys.path.append("/nas-ssd2/vaidehi/nlp13/")
 from LORA.lora_ft import easy_fine_tuning, get_lora_sample_data
 
