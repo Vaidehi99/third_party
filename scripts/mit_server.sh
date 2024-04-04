@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-04 21:39:51
+ # @LastEditTime: 2024-04-04 23:11:15
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -32,7 +32,7 @@ args="
     --fact_erasure
     --overwrite
     --attack pd
-    --layers_wb_attack $layers_wb_attack
+    --layers_wb_attack ${layers_wb_attack}
     --k 2
     --retain_rate
     --skip_generation_tests 
