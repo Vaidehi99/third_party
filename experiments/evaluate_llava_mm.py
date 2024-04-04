@@ -63,7 +63,7 @@ from transformer_utils.util.module_utils import get_child_module_by_names
 sys.path.append("/nas-ssd2/vaidehi/nlp13/")
 # from LORA.lora_ft import easy_fine_tuning, get_lora_sample_data
 
-# lora_sample_data = json.load(open("/nas-ssd2/vaidehi/nlp13/LORA/lora_sample.json", "r"))
+lora_sample_data = json.load(open("lora_sample.json", "r"))
 
 ALG_DICT = {
     "ROME": (ROMEHyperParams, apply_rome_to_model),
