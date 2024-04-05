@@ -1,6 +1,6 @@
 import argparse
 import sys
-sys.path.insert(0,"/nas-ssd2/vaidehi/nlp13/belief-localization/third_party/")
+# sys.path.insert(0,"/nas-ssd2/vaidehi/nlp13/belief-localization/third_party/")
 import json
 import os
 import shutil
@@ -757,6 +757,7 @@ def main(
             #         continue
 
             # generate essence_texts for evaluation if needed
+            print(do_essence_tests, skip_generation_tests)
             if do_essence_tests or not skip_generation_tests:
                 essence_prompt = "{} is a".format(subject)
                 if verbose:
