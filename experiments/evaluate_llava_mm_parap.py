@@ -915,7 +915,7 @@ def main(
                 # outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
                 # preds = [tok.decode(output) for output in outputs]
                 # preds = [pred.replace(query_input, "").strip() for pred, query_input in zip(preds, query_inputs)]
-                batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
                 pad_token_id = 0
                 print(batches)
                 outputs = [model.generate(**batches[i], do_sample=False, max_new_tokens=36,

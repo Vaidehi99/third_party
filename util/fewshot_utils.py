@@ -152,7 +152,7 @@ def simple_make_inputs(tokenizer, prompts, image_processor, image_ids, model, de
     assert (images_tensor.shape[0]==len(input_ids))
     # images_tensor = images_tensor.expand(torch.tensor(input_ids).shape[0], -1, -1, -1)
     return dict(
-        inputs=torch.tensor(input_ids).to(device),
+        input_ids=torch.tensor(input_ids).to(device),
         attention_mask=torch.tensor(attention_mask).to(device),
         images = images_tensor
     )
