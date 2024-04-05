@@ -67,7 +67,7 @@ def load_images(image_files):
 
 
 def get_image_path(image_id):
-  img_path = "/data1/TxPLM/okvqa/okvqa_yolo_dino_bert/original_images/{}.jpg".format(str(image_id).zfill(12))
+  img_path = "/data1/TxPLM/okvqa/train2017/{}.jpg".format(str(image_id).zfill(12))
   if not os.path.exists(img_path):
     img_path = "/data1/TxPLM/okvqa/train2014/{}.jpg".format(str(image_id).zfill(12))
   return img_path
