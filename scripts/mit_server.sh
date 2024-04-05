@@ -60,13 +60,14 @@ args="
     --fact_token subject_last
     --overwrite 
     --retain_rate 
-    --skip_generation_tests 
     --fact_erasure 
     --num_attack_parap 1 
     --bb_num_samples 20 
     --attack img 
     --img_attack_parap orig 
     --lft_edit
+    --do_essence_tests 0
+
 "
 
 CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm_parap ${args}
