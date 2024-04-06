@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-04 23:42:43
+ # @LastEditTime: 2024-04-06 10:01:02
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -65,7 +65,7 @@ args="
     --bb_num_samples 20 
     --attack img 
     --img_attack_parap orig 
-    --lft_edit
+    --cft_edit
     --do_essence_tests 0
 
 "
