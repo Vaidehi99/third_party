@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Tuple
 import torch
 import numpy as np
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from transformers import GPTJForCausalLM, GPT2Model
+#from transformers import GPTJForCausalLM, GPT2Model
 
 from experiments.causal_trace import find_token_range, simple_make_inputs, corrupted_forward_pass
 from util import nethook

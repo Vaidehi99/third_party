@@ -453,6 +453,7 @@ def make_editing_results_df(exp_name, n, case_ids_exec):
       continue
     with open(case_result_path, 'r') as f:
       record = json.load(f)
+    
     rewrite_data = record['requested_rewrite']
     prompt = rewrite_data['prompt'].format(rewrite_data['subject'])
     target = rewrite_data['target_true']['str']
@@ -474,6 +475,8 @@ def make_editing_results_df(exp_name, n, case_ids_exec):
             'retain_rate_neighborhood_pre': [record['retain_rate_neighborhood_pre']],
             'delta_accuracy': [record['delta_accuracy']],
             'delta_accuracy_neighborhood': [record['delta_accuracy_neighborhood']],
+            'actual_retain_rate': [record['actual_retain_rate']],
+            'actual_retain_rate_neighborhood': [record['actual_retain_rate_neighborhood']],
         }
     except:
         print("skipping ", case_result_path, " missing basic info")
@@ -709,7 +712,6 @@ def main(
         # if case_id == 1517 and ((args.alg_name == "ROME" and args.tracing_reversal) or len(hparams.layers) > 1):
         #     continue
         if rewrite_this_point:
-            
             print("Starting point: ", case_id)
             # print info for this point
             request = record["requested_rewrite"]
@@ -817,7 +819,7 @@ def main(
             elif args.dummy_string:
                 batch = make_inputs(mt.tokenizer, prompts=[prompt] * num_noise_samples, targets=[target_true] * num_noise_samples)
                 request['request_baseline'] = mt.tokenizer.eos_token
-                request['target_new']["str"] = "I don't know"
+                request['target_new']["str"] = "dummy"
             elif args.fact_amplification:
                 request['request_baseline'] = mt.tokenizer.eos_token # arbitrary token, won't use these metrics anyway
                 request['target_new'] = request['target_true']
@@ -924,6 +926,10 @@ def main(
                 
                 
                 retain_rate_pre = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
+                # print(image_ids)
+                # print(query_inputs)
+                # print(preds)
+                # print(sampled_targets)
                 preds_preedit = preds
         
                 
@@ -948,6 +954,11 @@ def main(
                 retain_rate_neighborhood_pre = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
 
                 preds_preedit_neighborhood = preds
+
+                # print(image_ids)
+                # print(query_inputs)
+                # print(preds)
+                # print(sampled_targets)
             
             # if args.debug:
             #     input_ids = torch.as_tensor(tok.encode(request['prompt'].format(request['subject']))).view(1, -1).to(device)
@@ -1022,9 +1033,9 @@ def main(
 
               elif args.lft_edit:
                 print("Executing edit method: LORA fine-tuning")
-                defense = "fact_erasure"
+                defense = "empty_response"
                 lft_data = get_lora_sample_data(request)
-                edited_model, weights_copy = easy_fine_tuning(model, tok, image_processor, defense, sample_data=lft_data, image_folder=".", learning_rate=1e-2, num_train_epochs=5, bf16=False)
+                edited_model, weights_copy = easy_fine_tuning(model, tok, image_processor, defense, sample_data=lft_data, image_folder=".", learning_rate=1e-3, num_train_epochs=40, bf16=False)
               
 
             #   torch.save(model.state_dict(), "/nas-ssd2/vaidehi/MMMEdit/data/model_posteedit.pt")
@@ -1124,8 +1135,12 @@ def main(
                 preds = tok.batch_decode(outputs, skip_special_tokens=True)
                 preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]
 
-                
+
                 retain_rate = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
+                # print(image_ids)
+                # print(query_inputs)
+                # print(preds)
+                # print(sampled_targets)
                 actual_retain_rate =  fewshot_accuracy_sum(preds, preds_preedit)/len(preds)
                 
         
@@ -1152,6 +1167,10 @@ def main(
                 preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]
 
                 retain_rate_neighborhood = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
+                # print(image_ids)
+                # print(query_inputs)
+                # print(preds)
+                # print(sampled_targets)
                 actual_retain_rate_neighborhood = fewshot_accuracy_sum(preds, preds_preedit_neighborhood)/len(preds)
 
 
@@ -1217,9 +1236,6 @@ def main(
                 batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
                 pad_token_id = 2
 
-                # print(batches[0])
-                # exit()
-                
                 
                 
                 outputs = [edited_model.generate(**batches[i], do_sample=True, max_new_tokens=36,
@@ -1252,7 +1268,7 @@ def main(
 
             
                 
-                
+            
 
             with torch.no_grad(): 
 
@@ -1266,8 +1282,11 @@ def main(
                     "retain_rate": retain_rate,
                     "retain_rate_neighborhood": retain_rate_neighborhood,
                     "retain_rate_pre" : retain_rate_pre,
-                    "retain_rate_neighborhood_pre" : retain_rate_neighborhood_pre
+                    "retain_rate_neighborhood_pre" : retain_rate_neighborhood_pre,
+                    "actual_retain_rate": actual_retain_rate,
+                    "actual_retain_rate_neighborhood": actual_retain_rate_neighborhood,
                 }
+                
                 for k, v in weights_copy.items():
                     nethook.get_parameter(model, k)[...] = v.to("cuda")
                 # model.load_state_dict(params_copy, strict=False)
@@ -1284,8 +1303,7 @@ def main(
                 batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
                 pad_token_id = 2
 
-                # print(batches[0])
-                # exit()
+
                 
                 
                 
@@ -1299,7 +1317,6 @@ def main(
                 preds_pre = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds_pre, [element for element in attack_paraps for i in range(args.bb_num_samples)])]
                 print("preds_pre")
                 print(preds_pre)
-                
                 # outputs = model.generate(**batch, do_sample=True, max_new_tokens=10,
                 #                   pad_token_id=pad_token_id, num_return_sequences=args.bb_num_samples)
                 #   print(outputs.shape)
@@ -1728,7 +1745,7 @@ if __name__ == "__main__":
     print(f"saving csv at {save_path}...")
     print("results shape: ", results_df.shape)
 
-    metrics = ['post_rewrite_success', 'rewrite_prob_diff', 'rewrite_post_prob', 'rewrite_score', 'post_paraphrase_success', 'paraphrase_prob_diff', 'paraphrase_post_prob', 'paraphrase_score', 'paraphrase_image_score', 'attack_frac', 'tgt_in_sample', 'attack_frac_pre', 'tgt_in_sample_pre', 'post_neighborhood_success', 'neighborhood_prob_diff', 'neighborhood_score', 'essence_ppl_diff', 'retain_rate_neighborhood_pre', 'retain_rate_pre', 'retain_rate_neighborhood', 'retain_rate', 'delta_accuracy', 'delta_accuracy_neighborhood', 'delta_accuracy', 'delta_accuracy_neighborhood', 'retain_rate_neighborhood_pre', 'retain_rate_pre', 'retain_rate_neighborhood', 'retain_rate']
+    metrics = ['post_rewrite_success', 'rewrite_prob_diff', 'rewrite_post_prob', 'rewrite_score', 'post_paraphrase_success', 'paraphrase_prob_diff', 'paraphrase_post_prob', 'paraphrase_score', 'paraphrase_image_score', 'attack_frac', 'tgt_in_sample', 'attack_frac_pre', 'tgt_in_sample_pre', 'post_neighborhood_success', 'neighborhood_prob_diff', 'neighborhood_score', 'essence_ppl_diff', 'retain_rate_neighborhood_pre', 'retain_rate_pre', 'retain_rate_neighborhood', 'retain_rate', 'delta_accuracy', 'delta_accuracy_neighborhood', 'delta_accuracy', 'delta_accuracy_neighborhood', 'retain_rate_neighborhood_pre', 'retain_rate_pre', 'retain_rate_neighborhood', 'retain_rate', 'retain_rate_neighborhood_pre', 'retain_rate_pre', 'retain_rate_neighborhood', 'retain_rate', 'delta_accuracy', 'delta_accuracy_neighborhood', 'delta_accuracy', 'delta_accuracy_neighborhood', 'actual_retain_rate_neighborhood', 'actual_retain_rate']
     # metrics = ["post_rewrite_acc", "pre_rewrite_acc", "post_paraphrase_acc", "pre_paraphrase_acc", "paraphrase_prompts_correct"]
     # another test code review comment
     if len(window_sizes) == 1 and len(central_layers) == 1:

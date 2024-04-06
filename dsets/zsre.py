@@ -81,7 +81,7 @@ class MENDQADataset:
                         "target_new": {"str": alt_ans},
                         "target_true": {"str": true_answer},  
                     },
-                    "paraphrase_prompts": [f"Answer the question in one word\n Question: {record['rephrase']} Answer:"],
+                    "paraphrase_prompts": [f"Answer the question in one word\n Question: {record['rephrase'][i]} Answer:" for i in range(len(record['rephrase']))],
                     "neighborhood_prompts": [
                         {
                             "prompt": record["loc"][i],
