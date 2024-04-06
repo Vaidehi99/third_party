@@ -49,7 +49,7 @@ from tqdm import tqdm
 from transformer_utils.util.module_utils import get_child_module_by_names
 from experiments.evaluate_llava_mm import get_image_path
 # sys.path.append("/nas-ssd2/vaidehi/nlp13/")
-# from LORA.lora_ft import easy_fine_tuning, get_lora_sample_data
+from lora_ft import easy_fine_tuning, get_lora_sample_data
 
 
 ALG_DICT = {
