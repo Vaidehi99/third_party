@@ -272,7 +272,7 @@ def make_inputs(tokenizer, image_processor, prompts, image_ids, model, img_attac
         pad_id = tokenizer.pad_token_id
     else:
         pad_id = 2
-    input_lens = len(tokenizer.encode("A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions. USER: <image>\n"))
+    # input_lens = len(tokenizer.encode("A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions. USER: <image>\n"))
 
     # if targets is None:
     #   maxlen = max(len(t) for t in token_lists)
@@ -299,6 +299,7 @@ def make_inputs(tokenizer, image_processor, prompts, image_ids, model, img_attac
       # query_ids = [token_lists[i][:input_lens-2]+[pad_id] * (maxlen - len(token_lists[i])) + token_lists[i][input_lens-2:] for i in range(len(token_lists))]
       query_ids = [t + [pad_id] * (maxlen - len(t)) for t in token_lists]
       input_ids = [t + [pad_id] * (maxlen - len(t)) for t in combine_lists]
+      print(len(input_ids))
       # query_ids = [[pad_id] * (maxlen - len(t)) + t for t in token_lists]
       # input_ids = [[pad_id] * (maxlen - len(t)) + t for t in combine_lists]
       # input_ids = [combine_lists[i][:input_lens-2]+[pad_id] * (maxlen - len(combine_lists[i])) + combine_lists[i][input_lens-2:] for i in range(len(combine_lists))]
@@ -326,6 +327,8 @@ def make_inputs(tokenizer, image_processor, prompts, image_ids, model, img_attac
       for img_id in image_ids:
         img_paths += get_image_path_parap(img_id, img_attack_parap) 
 
+ 
+
       images = load_images(image_files=img_paths) #["/nas-ssd2/dataset/coco2017/train2017/000000357587.jpg"])#"/nas-ssd2/dataset/coco2017/train2017/000000339761.jpg"])#"/nas-ssd2/dataset/coco2017/val2017/000000297147.jpg"])
       # images_tensor = image_processor.preprocess(images, return_tensors='pt')['pixel_values'].half().to(device)
 
@@ -335,7 +338,8 @@ def make_inputs(tokenizer, image_processor, prompts, image_ids, model, img_attac
         model.config
       ).to(device, dtype=torch.float16)
 
-      if True:
+
+      if images_tensor.shape[0]!=len(input_ids):
         num_images = images_tensor.shape[0]
         images_tensor = torch.cat([images_tensor for i in range(len(input_ids))], 0) #images_tensor.expand(net_size, -1, -1, -1)
       
@@ -347,7 +351,7 @@ def make_inputs(tokenizer, image_processor, prompts, image_ids, model, img_attac
 
 
       assert(images_tensor.shape[0]==len(input_ids))
-     
+   
       return dict(
           input_ids=torch.tensor(input_ids).to(device),
           query_ids=torch.tensor(query_ids).to(device),
@@ -547,7 +551,7 @@ def score_from_batch(model, batch, return_log_probs=False):
   # print(target_tokens)
   # print(target_mask)
   # exit()  
-  print(model_batch['input_ids'].shape)
+  # print(model_batch['input_ids'].shape)
  
   logits = model(**model_batch).logits
 
@@ -662,7 +666,6 @@ def predict_model(mt,
       outputs = [list(filter(lambda x: x != pad_token_id, output)) for output in outputs]
       preds = [mt.tokenizer.decode(output) for output in outputs]
       preds = [pred.replace(query_input, "").strip() for pred, query_input in zip(preds, query_inputs)]
-      print(preds)     
       # for some reason huggingface generate not giving generation probs, so we recalculate
       if score_if_generating: 
         batch = make_inputs(mt.tokenizer, query_inputs, targets=preds)

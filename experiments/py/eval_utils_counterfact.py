@@ -48,10 +48,13 @@ def compute_rewrite_quality_counterfact(
     :return: Dictionary containing rewriting metrics
     """
 
+
     # First, unpack rewrite evaluation record.
     subject, target_new, request_baseline = (
         record["requested_rewrite"][x] for x in ["subject", "target_new", "request_baseline"]
     )
+
+
     rewrite_prompts = [record["requested_rewrite"]["prompt"].format(subject)]
     paraphrase_image_prompts = [record["requested_rewrite"]["prompt"].format(subject)]
     paraphrase_prompts = record["paraphrase_prompts"]
@@ -72,6 +75,7 @@ def compute_rewrite_quality_counterfact(
         ]
         neighborhood_prompts = [prompt.replace("nq question:", "Answer the question in one word:\n Question:") + " Answer:" for prompt in neighborhood_prompts]
 
+    
     # Form a list of lists of prefixes to test.
     prob_prompts = [
         rewrite_prompts,
@@ -80,11 +84,13 @@ def compute_rewrite_quality_counterfact(
         attribute_prompts,
     ]
 
+ 
+
 
     prob_prompts_image = [paraphrase_image_prompts]
 
 
-    
+    # print(list(chain(*prob_prompts)))
     # Flatten all the evaluated prefixes into one list.
     probs = test_batch_prediction(
         args, model, tok, image_processor, list(chain(*prob_prompts)), image_id, target_new["str"], request_baseline, subject
@@ -192,7 +198,10 @@ def test_batch_prediction(
     
     repeated_prefixes = list(itertools.chain(*[[prefix, prefix] for prefix in prefixes]))
     image_ids = [image_id]*len(repeated_prefixes)
+
+
     batch = make_inputs(tok, image_processor, repeated_prefixes, image_ids, model, args.img_attack_parap, targets)    
+
     # import pdb; pdb.set_trace()
     with nethook.TraceDict(model, [embed_layername], edit_output=noise_embeddings) if args.fact_forcing or args.weight_based_tracing else nullcontext():
         results = score_from_batch(model, batch, return_log_probs=True)
