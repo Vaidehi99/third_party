@@ -76,7 +76,7 @@ def get_image_path_parap(image_id, img_attack_parap):
     img_path_orig = get_image_path(image_id)
     img_path_easy = "/nas-ssd2/vaidehi/nlp13/data/images/{}.jpg".format(str(image_id).zfill(12))
     img_path_medium = "/nas-ssd2/vaidehi/MMMEdit/data/okvqa/parap_images_medium/{}.jpg".format(str(image_id))
-    img2id = json.load(open("/nas-ssd2/vaidehi/nlp13/belief-localization/third_party/data/img2id.json","r"))
+    img2id = json.load(open("data/img2id.json","r"))
     
     if img_attack_parap=="hard":
       img_path_hard = "/nas-ssd2/vaidehi/MMMEdit/data/okvqa/parap_images_hard/outputs_yolo_dino/processed_images/{}.jpg".format(img2id[str(image_id)])
