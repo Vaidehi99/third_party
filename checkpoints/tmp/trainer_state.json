@@ -11,10 +11,10 @@
       "epoch": 40.0,
       "step": 40,
       "total_flos": 206290004213760.0,
-      "train_loss": 1.4616601943969727,
-      "train_runtime": 76.0302,
-      "train_samples_per_second": 0.526,
-      "train_steps_per_second": 0.526
+      "train_loss": 1.456373405456543,
+      "train_runtime": 77.5933,
+      "train_samples_per_second": 0.516,
+      "train_steps_per_second": 0.516
     }
   ],
   "max_steps": 40,
