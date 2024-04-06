@@ -110,7 +110,8 @@ def execute_ft(
         e_range = request['e_range']
 
     # Retrieve weights that user desires to change
-    
+    print(hparams.rewrite_module_tmp)
+    print(hparams.layers)
     weights = {
         n: p
         for n, p in model.named_parameters()
