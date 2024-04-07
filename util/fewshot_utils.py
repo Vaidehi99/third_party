@@ -567,6 +567,7 @@ def score_from_batch(model, batch, return_log_probs=False):
   # align probs and target mask by cutting off one token idx from the ends
   log_probs = log_probs[:,:-1,:] # batch_size x seq_len x vocab_size
   # print(log_probs.shape)
+  print(target_tokens)
 
   target_tokens = target_tokens[:,1:] # batch_size x seq_len
 
