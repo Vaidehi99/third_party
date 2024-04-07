@@ -55,7 +55,6 @@ from llava.constants import (
     DEFAULT_IMAGE_TOKEN,
     DEFAULT_IM_START_TOKEN,
     DEFAULT_IM_END_TOKEN,
-    IMAGE_PLACEHOLDER,
 )
 
 # from transformer_utils.src.transformer_utils.util.module_utils import get_child_module_by_names
