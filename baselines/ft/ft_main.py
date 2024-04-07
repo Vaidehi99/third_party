@@ -174,7 +174,7 @@ def execute_ft(
             # # batch forward pass
 
             batch = make_inputs(tok, image_processor, txt, image_ids, model, args.img_attack_parap, tgt)
-           
+            print(batch)
             # print([v.shape for k,v in batch.items()])
         
             if not args.weight_based_tracing:
