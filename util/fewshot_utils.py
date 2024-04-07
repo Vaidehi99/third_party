@@ -583,6 +583,7 @@ def score_from_batch(model, batch, return_log_probs=False):
   # will sum up log probs, so zero out log_probs for non-target indices
   log_probs = target_mask * log_probs
   seq_log_probs = log_probs.sum(-1)
+  print(target_mask)
   # print("prob")
   # print(torch.exp(seq_log_probs))
   # import pdb

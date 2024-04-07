@@ -183,11 +183,10 @@ def execute_ft(
             if not args.weight_based_tracing:
 
                 seq_log_probs = score_from_batch(model, batch, return_log_probs=True)
-
+                print(seq_log_probs)
 
                 nll = -seq_log_probs.sum()
                 pred_prob = torch.exp(-nll)
-                print(pred_prob)
 
                 
 
