@@ -187,7 +187,7 @@ def execute_ft(
 
                 nll = -seq_log_probs.sum()
                 pred_prob = torch.exp(-nll)
-                # print(pred_prob)
+                print(pred_prob)
 
                 
 
@@ -252,7 +252,7 @@ def execute_ft(
 
             if type(hparams.norm_constraint) is float:
                 eps = hparams.norm_constraint
-                print(eps)
+                # print(eps)
                 with torch.no_grad():
                     for k, v in weights.items():
                         v[...] = torch.clamp(
