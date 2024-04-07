@@ -577,14 +577,14 @@ def score_from_batch(model, batch, return_log_probs=False):
   
   # print(log_probs.shape)
   log_probs = log_probs[:, -target_tokens.shape[1]:,:]
+  with torch.no_grad():
+    print(log_probs.argmax(dim=-1))
   # print(log_probs.shape)
   log_probs = torch.gather(log_probs, -1, target_tokens.unsqueeze(-1)).squeeze(-1)
   # print(log_probs.shape)
  
   # will sum up log probs, so zero out log_probs for non-target indices
-  with torch.no_grad():
-    print(log_probs.argmax(dim=-1))
-    
+
   log_probs = target_mask * log_probs
   seq_log_probs = log_probs.sum(-1)
   print(target_mask, target_mask.shape)
