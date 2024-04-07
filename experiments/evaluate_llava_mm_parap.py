@@ -679,7 +679,6 @@ def main(
     else:
       model, tok = mt.model, mt.tokenizer
     tok.pad_token = tok.eos_token
-    print(image_processor)
     
     if args.low_rank:
         low_rank_matrices = ['model.layers.26.mlp.down_proj.weight']

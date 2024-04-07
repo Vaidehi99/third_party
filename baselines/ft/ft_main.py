@@ -174,7 +174,7 @@ def execute_ft(
             # # batch forward pass
 
             batch = make_inputs(tok, image_processor, txt, image_ids, model, args.img_attack_parap, tgt)
-            print(batch)
+            # print(batch)
             # print([v.shape for k,v in batch.items()])
         
             if not args.weight_based_tracing:
@@ -220,6 +220,7 @@ def execute_ft(
             loss_meter.update(loss.item(), n=bs)
 
             if loss.item() >= 1e-2:
+                print("Back gradient")
                 loss.backward()
                 # zero out grad for embeds
                 if embedding_token_idx is not None:
@@ -233,6 +234,7 @@ def execute_ft(
                     n_embeds = embeddings.size(0)
                     non_subj_embeds = np.setdiff1d(np.arange(n_embeds), embedding_token_idx)
                     embeddings.grad[non_subj_embeds,:] = 0
+                print("OPT gradient")
                 opt.step()
                 opt.zero_grad()
 
