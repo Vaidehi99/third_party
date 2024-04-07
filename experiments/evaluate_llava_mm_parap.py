@@ -773,7 +773,7 @@ def main(
                 #    max_out_len=100,
                 #)
                 inputs = tok([essence_prompt], padding=True, return_tensors="pt").to(device)#.cuda()#to(next(model.parameters()).device)
-                inputs['inputs'] = inputs.input_ids
+                # inputs['inputs'] = inputs.input_ids
                 essence_texts = model.generate(**inputs, max_new_tokens=100, num_return_sequences=5, do_sample=True, top_k=5)
                 essence_texts = list(tok.batch_decode(essence_texts, skip_special_tokens=True))
                 # print("essence_texts")
@@ -917,7 +917,8 @@ def main(
                 # outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
                 # preds = [tok.decode(output) for output in outputs]
                 # preds = [pred.replace(query_input, "").strip() for pred, query_input in zip(preds, query_inputs)]
-                batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                # batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
                 pad_token_id = 0
                 # print(batches)
                 outputs = [model.generate(**batches[i], do_sample=False, max_new_tokens=36,
@@ -946,7 +947,8 @@ def main(
                 # preds = [tok.decode(output) for output in outputs]
                 # preds = [pred.replace(query_input, "").strip() for pred, query_input in zip(preds, query_inputs)]
 
-                batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                # batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
                 pad_token_id = 0
                 outputs = [model.generate(**batches[i], do_sample=False, max_new_tokens=36,
                                   pad_token_id=0)[0] for i in range(len(batch["input_ids"]))]
@@ -1129,7 +1131,8 @@ def main(
                 # preds = [pred.replace(query_input, "").strip() for pred, query_input in zip(preds, query_inputs)]
                 # print(preds)
 
-                batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                # batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
                 pad_token_id = 0
                 outputs = [model.generate(**batches[i], do_sample=False, max_new_tokens=36,
                                   pad_token_id=0)[0] for i in range(len(batch["input_ids"]))]
@@ -1160,7 +1163,8 @@ def main(
                 # outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
                 # preds = [tok.decode(output) for output in outputs]
                 # preds = [pred.replace(query_input, "").strip() for pred, query_input in zip(preds, query_inputs)]
-                batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                # batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
                 pad_token_id = 0
                 outputs = [model.generate(**batches[i], do_sample=False, max_new_tokens=36,
                                   pad_token_id=0)[0] for i in range(len(batch["input_ids"]))]
@@ -1236,7 +1240,8 @@ def main(
                 torch.manual_seed(42)
                 #   set_seed(42)
 
-                batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                # batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
                 pad_token_id = 2
 
                 
@@ -1303,7 +1308,8 @@ def main(
                 metrics["pre"] = ds_eval_method(args, model, tok, image_processor, record, snips, vec, skip_generation_tests, ds_name=ds_name)
                 metrics['prior_prob'] = prior_prob
 
-                batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                # batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
                 pad_token_id = 2
 
 
