@@ -238,7 +238,7 @@ def execute_ft(
                     embeddings.grad[non_subj_embeds,:] = 0
                 print("OPT gradient")
                 opt.step()
-                opt.zero_grad()
+                # opt.zero_grad()
 
             if args.weight_based_tracing:
                 if it <= 5 or it % 10 == 0:
