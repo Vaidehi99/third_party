@@ -149,6 +149,7 @@ def execute_ft(
     #     lr=hparams.lr,
     #     weight_decay=hparams.weight_decay,
     # )
+    print(hparams.lr, hparams.weight_decay)
     opt = torch.optim.SGD(
         [v for _, v in weights.items()],
         lr=hparams.lr,
@@ -156,6 +157,7 @@ def execute_ft(
     )
     for name, w in model.named_parameters():
         w.requires_grad = name in weights
+    print([(pn, p.requires_grad) in weights.items()])
     # print("requires_grad_7")
     # for name, w in model.named_parameters():
     #     if w.requires_grad:
