@@ -11,7 +11,7 @@ from llava.constants import (
     DEFAULT_IMAGE_TOKEN,
     DEFAULT_IM_START_TOKEN,
     DEFAULT_IM_END_TOKEN,
-    IMAGE_PLACEHOLDER,
+    # IMAGE_PLACEHOLDER,
 )
 from PIL import Image
 import os
