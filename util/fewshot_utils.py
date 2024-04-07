@@ -567,7 +567,7 @@ def score_from_batch(model, batch, return_log_probs=False):
   # align probs and target mask by cutting off one token idx from the ends
   log_probs = log_probs[:,:-1,:] # batch_size x seq_len x vocab_size
   # print(log_probs.shape)
-  print(target_tokens, target_tokens.shape)
+  print("target_tokens", target_tokens, target_tokens.shape)
 
   target_tokens = target_tokens[:,1:] # batch_size x seq_len
 
@@ -578,7 +578,7 @@ def score_from_batch(model, batch, return_log_probs=False):
   # print(log_probs.shape)
   log_probs = log_probs[:, -target_tokens.shape[1]:,:]
   with torch.no_grad():
-    print(log_probs.argmax(dim=-1))
+    print("log_probs", log_probs.argmax(dim=-1))
   # print(log_probs.shape)
   log_probs = torch.gather(log_probs, -1, target_tokens.unsqueeze(-1)).squeeze(-1)
   # print(log_probs.shape)
@@ -587,8 +587,8 @@ def score_from_batch(model, batch, return_log_probs=False):
 
   log_probs = target_mask * log_probs
   seq_log_probs = log_probs.sum(-1)
-  print(target_mask, target_mask.shape)
-  print(model_batch['input_ids'], model_batch['input_ids'].shape)
+  print("target_mask", target_mask, target_mask.shape)
+  print("model_batch", model_batch['input_ids'], model_batch['input_ids'].shape)
   # print("prob")
   # print(torch.exp(seq_log_probs))
   # import pdb
