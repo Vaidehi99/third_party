@@ -183,7 +183,7 @@ def execute_ft(
             if not args.weight_based_tracing:
 
                 seq_log_probs = score_from_batch(model, batch, return_log_probs=True)
-                print(seq_log_probs)
+                # print(seq_log_probs)
 
                 nll = -seq_log_probs.sum()
                 pred_prob = torch.exp(-nll)
@@ -222,7 +222,7 @@ def execute_ft(
             loss_meter.update(loss.item(), n=bs)
 
             if loss.item() >= 1e-2:
-                print("Back gradient")
+                # print("Back gradient")
                 loss.backward()
                 # zero out grad for embeds
                 if embedding_token_idx is not None:
@@ -236,9 +236,9 @@ def execute_ft(
                     n_embeds = embeddings.size(0)
                     non_subj_embeds = np.setdiff1d(np.arange(n_embeds), embedding_token_idx)
                     embeddings.grad[non_subj_embeds,:] = 0
-                print("OPT gradient")
+                # print("OPT gradient")
                 opt.step()
-                # opt.zero_grad()
+                opt.zero_grad()
 
             if args.weight_based_tracing:
                 if it <= 5 or it % 10 == 0:
