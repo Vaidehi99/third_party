@@ -252,6 +252,7 @@ def execute_ft(
 
             if type(hparams.norm_constraint) is float:
                 eps = hparams.norm_constraint
+                print(eps)
                 with torch.no_grad():
                     for k, v in weights.items():
                         v[...] = torch.clamp(
