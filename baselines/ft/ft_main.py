@@ -155,6 +155,7 @@ def execute_ft(
         lr=hparams.lr,
         weight_decay=hparams.weight_decay,
     )
+    print(weights.keys())
     for name, w in model.named_parameters():
         w.requires_grad = name in weights
     print([(pn, p.requires_grad) in weights.items()])
