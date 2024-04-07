@@ -567,7 +567,7 @@ def score_from_batch(model, batch, return_log_probs=False):
   # align probs and target mask by cutting off one token idx from the ends
   log_probs = log_probs[:,:-1,:] # batch_size x seq_len x vocab_size
   # print(log_probs.shape)
-  print(target_tokens)
+  print(target_tokens, target_tokens.shape)
 
   target_tokens = target_tokens[:,1:] # batch_size x seq_len
 
@@ -582,6 +582,9 @@ def score_from_batch(model, batch, return_log_probs=False):
   # print(log_probs.shape)
  
   # will sum up log probs, so zero out log_probs for non-target indices
+  with torch.no_grad():
+    print(log_probs.argmax(dim=-1))
+    
   log_probs = target_mask * log_probs
   seq_log_probs = log_probs.sum(-1)
   print(target_mask, target_mask.shape)
