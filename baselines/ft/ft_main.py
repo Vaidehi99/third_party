@@ -112,13 +112,13 @@ def execute_ft(
     # Retrieve weights that user desires to change
     # print(hparams.rewrite_module_tmp)
     # print(hparams.layers)
-    for layer in hparams.layers:
-        print(hparams.rewrite_module_tmp.format(layer))
+    # for layer in hparams.layers:
+    #     print(hparams.rewrite_module_tmp.format(layer))
     for pn, p in model.named_parameters():
-        print(pn)
-        if hparams.rewrite_module_tmp.format(layer) in pn:
-            p.requires_grad_(True)
-            print(pn, p.requires_grad)
+        for layer in hparams.layers:
+            if hparams.rewrite_module_tmp.format(layer) in pn:
+                p.requires_grad_(True)
+                print(pn, p.requires_grad)
     weights = {
         n: p
         for n, p in model.named_parameters()
