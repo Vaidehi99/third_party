@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-07 09:19:57
+ # @LastEditTime: 2024-04-07 12:26:29
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -47,7 +47,7 @@ layers_wb_attack="22,23,24,25,26,27,28,29,30,31,32"
 # "
 
 args=" 
-    -n 2
+    -n 600
     --alg_name FT
     --window_sizes 1
     --ds_name zsre
@@ -61,9 +61,9 @@ args="
     --overwrite 
     --retain_rate 
     --fact_erasure 
-    --num_attack_parap 1 
-    --bb_num_samples 20 
-    --attack img 
+    --num_attack_parap 4
+    --bb_num_samples 5 
+    --attack bb 
     --img_attack_parap orig 
     --cft_edit
     --do_essence_tests 0
