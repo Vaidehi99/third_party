@@ -584,7 +584,7 @@ def score_from_batch(model, batch, return_log_probs=False):
   log_probs = target_mask * log_probs
   seq_log_probs = log_probs.sum(-1)
   print(target_mask, target_mask.shape)
-  print(model_batch, model_batch.shape)
+  print(model_batch['input_ids'], model_batch['input_ids'].shape)
   # print("prob")
   # print(torch.exp(seq_log_probs))
   # import pdb
