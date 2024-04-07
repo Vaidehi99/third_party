@@ -114,18 +114,19 @@ def execute_ft(
     # print(hparams.layers)
     # for layer in hparams.layers:
     #     print(hparams.rewrite_module_tmp.format(layer))
-    for pn, p in model.named_parameters():
-        for layer in hparams.layers:
-            if hparams.rewrite_module_tmp.format(layer) in pn:
-                p.requires_grad_(True)
-                print(pn, p.requires_grad)
+    # for pn, p in model.named_parameters():
+    #     for layer in hparams.layers:
+    #         if hparams.rewrite_module_tmp.format(layer) in pn:
+    #             p.requires_grad_(True)
+    #             print(pn, p.requires_grad)
     weights = {
         n: p
         for n, p in model.named_parameters()
         for layer in hparams.layers
         if hparams.rewrite_module_tmp.format(layer) in n
     }
-
+    for pn, p in model.named_parameters():
+        p.requires_grad = pn in weights
    
     # add embeddings
     # will zero out grads for non subject token idx as needed later
