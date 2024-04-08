@@ -5,7 +5,7 @@
 *.pkl
 
 # Python
-__pycache__
+*/__pycache__
 *.pyc
 *.egg-info
 dist
@@ -35,3 +35,5 @@ ckpts*
 *.ipynb
 *.pyc
 *.json
+/results
+/checkpoints/*
