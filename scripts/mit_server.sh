@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-07 12:26:29
+ # @LastEditTime: 2024-04-08 09:18:19
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -60,15 +60,13 @@ args="
     --fact_token subject_last
     --overwrite 
     --retain_rate 
-    --fact_erasure 
-    --num_attack_parap 4
-    --bb_num_samples 5 
-    --attack bb 
-    --img_attack_parap orig 
-    --cft_edit
-    --do_essence_tests 0
     --skip_generation_tests 
-
+    --num_attack_parap 1
+    --bb_num_samples 20
+    --attack img
+    --img_attack_parap orig 
+    --lft_edit
+    --do_essence_tests 0
 "
 
 CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm_parap ${args}
