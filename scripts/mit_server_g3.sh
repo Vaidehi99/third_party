@@ -2,8 +2,8 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-08 09:18:19
- # @FilePath: /third_party/scripts/mit_server.sh
+ # @LastEditTime: 2024-04-08 23:03:39
+ # @FilePath: /third_party/scripts/mit_server_g3.sh
  # @Description: 
  # 
  # Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
@@ -49,6 +49,7 @@ layers_wb_attack="22,23,24,25,26,27,28,29,30,31,32"
 args=" 
     -n 600
     --alg_name FT
+    --lr 1e-1
     --window_sizes 1
     --ds_name zsre
     --model_name liuhaotian/llava-v1.5-7b
