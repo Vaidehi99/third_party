@@ -63,10 +63,11 @@ args="
     --skip_generation_tests 
     --num_attack_parap 1
     --bb_num_samples 20
-    --attack img
+    --attack bb
     --img_attack_parap orig 
-    --lft_edit
+    --cft_edit
+    --dummy_string
     --do_essence_tests 0
 "
 
-CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm_parap ${args}
+CUDA_VISIBLE_DEVICES="3" python -m experiments.evaluate_llava_mm_parap ${args}
