@@ -1221,7 +1221,7 @@ def main(
 
                     # attack_paraps = [sys_prompt.format(attack_parap) for attack_parap in attack_paraps]
                     if args.attack=="multimodal" or args.attack=="jailbreak":
-                        batch = simple_make_inputs_image(tok, attack_paraps, image_processor, image_id, img_attack_parap=args.img_attack_parap)
+                        batch = simple_make_inputs_image(tok, attack_paraps, image_processor, image_id, model, img_attack_parap=args.img_attack_parap)
                     else:
                         image_ids = [image_id]*len(attack_paraps)
                         batch = simple_make_inputs(tok, attack_paraps, image_processor, image_ids, model)
