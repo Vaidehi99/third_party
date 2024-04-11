@@ -1020,7 +1020,6 @@ def main(
             
 
               if args.cft_edit:
-
                 edited_model, weights_copy = apply_algo(
                   args,
                   model,
