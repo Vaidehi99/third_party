@@ -525,8 +525,7 @@ class ModelAndTokenizer:
                 tokenizer, model, image_processor, context_len = load_pretrained_model(
                     model_path=model_path,
                     model_base=None,
-                    model_name=get_model_name_from_path(model_path),
-                    cache_dir = '/nas-ssd2/vaidehi/MMMEdit/cache/'
+                    model_name=get_model_name_from_path(model_path)
                 )
                 nethook.set_requires_grad(False, model)
                 # model.eval().cuda()
