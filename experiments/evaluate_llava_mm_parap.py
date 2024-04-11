@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 from typing import Tuple, Union
 from contextlib import nullcontext
-
+import random
 import torch
 import pandas as pd
 import numpy as np
@@ -51,6 +51,15 @@ from experiments.evaluate_llava_mm import get_image_path
 # sys.path.append("/nas-ssd2/vaidehi/nlp13/")
 from lora_ft import easy_fine_tuning, get_lora_sample_data
 
+from llava.mm_utils import (
+    process_images,
+    tokenizer_image_token,
+    get_model_name_from_path,
+    KeywordsStoppingCriteria,
+)
+
+
+random.seed(42)
 
 ALG_DICT = {
     "ROME": (ROMEHyperParams, apply_rome_to_model),
@@ -85,6 +94,7 @@ retain_rate_samples = json.load(open("data/zsre_mend_eval.json","rb"))[700:]
 # rephrases = pickle.load(open("/nas-ssd2/vaidehi/nlp13/paraphrase/okvqa_all_parap.pkl","rb"))
 sys_prompt_pred = "A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions. USER:  \n{} ASSISTANT: "
 sys_prompt = "A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions. USER: <image>\n{} ASSISTANT:"
+lora_sample_data = json.load(open("lora_sample.json", "r"))
 
 def flatten(xss):
     return [x for xs in xss for x in xs]
@@ -390,7 +400,7 @@ def sweep_experiment_name(args, model_name, alg_name, ds_name, sweep_params):
     obj = '_dummy_{}_img_attack_parap_{}'.format(args.attack, args.img_attack_parap)
   else:
     obj = '_erro_inj_{}_img_attack_parap_{}'.format(args.attack, args.img_attack_parap)
-  return f'{exp_name}{obj}_n{args.dataset_size_limit}_top-{args.k}_lowrank-{args.low_rank}_parap_image'
+  return f'{exp_name}{obj}_n{args.dataset_size_limit}_top-{args.k}_lowrank-{args.low_rank}_parap_image_lftedit{args.lft_edit}_cftedit{args.cft_edit}_ml{args.margin_loss}_el{args.entropy_loss}_fae{args.ft_after_edit}'
 
 def ROME_experiment_name(args, model_name, alg_name, ds_name, hparams_to_add):
   exp_name = f'{model_name}/{alg_name}_outputs_{ds_name}'
@@ -420,7 +430,7 @@ def ROME_experiment_name(args, model_name, alg_name, ds_name, hparams_to_add):
   else:
     obj = '_erro_inj_{}_img_attack_parap_{}'.format(args.attack, args.img_attack_parap)
   exp_name = exp_name + obj
-  return f'{exp_name}_n{args.dataset_size_limit}_top-{args.k}_lowrank-{args.low_rank}_parap_image'
+  return f'{exp_name}_n{args.dataset_size_limit}_top-{args.k}_lowrank-{args.low_rank}_parap_image_lftedit{args.lft_edit}_cftedit{args.cft_edit}_ml{args.margin_loss}_el{args.entropy_loss}_fae{args.ft_after_edit}'
 
 def ROME_experiment_name_from_override_params(args, model_name, alg_name, ds_name, override_hparams, hparams_class):
   _model_name = model_name.replace('/', '_')
@@ -681,8 +691,9 @@ def main(
     tok.pad_token = tok.eos_token
     
     if args.low_rank:
-        low_rank_matrices = ['model.layers.26.mlp.down_proj.weight']
-        w = nethook.get_parameter(model, low_rank_matrices[0])
+        # low_rank_matrices = ['model.layers.26.mlp.down_proj.weight']
+        # w = nethook.get_parameter(model, low_rank_matrices[0])
+        low_rank_matrices = ['model.layers.26.mlp.up_proj.weight','model.layers.27.mlp.up_proj.weight','model.layers.28.mlp.up_proj.weight']
         with torch.no_grad():
             for w_name in low_rank_matrices:
                 w = nethook.get_parameter(model, w_name)
@@ -818,7 +829,7 @@ def main(
                 request['request_baseline'] = mt.tokenizer.eos_token # arbitrary token, won't use these metrics anyway
                 request['target_new'] = request['target_true']
             elif args.dummy_string:
-                batch = make_inputs(mt.tokenizer, prompts=[prompt] * num_noise_samples, targets=[target_true] * num_noise_samples)
+                # batch = make_inputs(mt.tokenizer, prompts=[prompt] * num_noise_samples, targets=[target_true] * num_noise_samples)
                 request['request_baseline'] = mt.tokenizer.eos_token
                 request['target_new']["str"] = "dummy"
             elif args.fact_amplification:
@@ -837,7 +848,11 @@ def main(
 
             # language setting
 
-            input_ids = torch.as_tensor(tok.encode(request['prompt'].format(request['subject']))).view(1, -1).to(device)
+            if args.use_img_token:
+                batch = simple_make_inputs(tok, [request['prompt'].format(request['subject'])], image_processor, [request['image_id']], model)
+                # input_ids = torch.as_tensor(tokenizer_image_token(sys_prompt.format(request['prompt'].format(request['subject'])), tok, IMAGE_TOKEN_INDEX)).view(1, -1).to(device)
+            else:
+                input_ids = torch.as_tensor(tok.encode(request['prompt'].format(request['subject']))).view(1, -1).to(device)
 
             # if args.dummy_string:
             #     target_ids = torch.as_tensor(tok.encode(request['target_true']['str']))[1:].view(1, -1).to(device)
@@ -847,11 +862,15 @@ def main(
             # print(request['target_true']['str'])
             # image setting    
             image_id = request['image_id']
-            img_path = get_image_path(image_id)
+            if not args.use_img_token:
+                image_id = request['image_id']
+                img_path = get_image_path(image_id)
 
-            images = load_images(image_files=[img_path])#["/nas-ssd2/dataset/coco2017/train2017/000000357587.jpg"])#"/nas-ssd2/dataset/coco2017/train2017/000000339761.jpg"])#"/nas-ssd2/dataset/coco2017/val2017/000000297147.jpg"])
-            images_tensor = image_processor.preprocess(images, return_tensors='pt')['pixel_values'].half().to(device)
-            images_tensor = images_tensor.expand(torch.tensor(input_ids).shape[0], -1, -1, -1)
+                images = load_images(image_files=[img_path])#["/nas-ssd2/dataset/coco2017/train2017/000000357587.jpg"])#"/nas-ssd2/dataset/coco2017/train2017/000000339761.jpg"])#"/nas-ssd2/dataset/coco2017/val2017/000000297147.jpg"])
+                images_tensor = process_images(images, image_processor,model.config).to(model.device, dtype=torch.float16)
+
+                # images_tensor = image_processor.preprocess(images, return_tensors='pt')['pixel_values'].half().to(device)
+                images_tensor = images_tensor.expand(torch.tensor(input_ids).shape[0], -1, -1, -1)
                 
             # get additional functions and variables based on objectives
             # get hidden representations from corrupted+uncorrupted forward passes to use as targets for weight editing
@@ -899,54 +918,36 @@ def main(
                 else dict()
             )
 
-            if args.retain_rate:
-                random.seed(42)
-                sampled = sample(retain_rate_samples, 10)
+            sampled = sample(retain_rate_samples, 10)
                 # query_inputs, sampled_targets = [x['requested_rewrite']['prompt'].format(x['requested_rewrite']['subject']) for x in sampled], [x['requested_rewrite']['target_true']['str'] for x in sampled]
-                # query_inputs, sampled_targets, image_ids = ["Answer the question in one word:\n Question: {} Answer:".format(x["src"]) for x in sampled], [x["pred"] for x in sampled]
+                # query_inputs, sampled_targets = [DEFAULT_IMAGE_TOKEN + "\n" + "Answer the question in one word:\n Question: {} Answer:".format(x["src"]) for x in sampled], [x["pred"] for x in sampled]
                 query_inputs, sampled_targets, image_ids = ["Answer the question in one word:\n Question: {} Answer:".format(x["src"]) for x in sampled], [x["pred"] for x in sampled], [x["image_id"] for x in sampled] 
-            
-
+                # query_inputs, sampled_targets, image_ids = [sys_prompt.format("Describe the image") for x in sampled], [x["pred"] for x in sampled], [x["image_id"] for x in sampled] 
+                
+                # query_inputs, sampled_targets = [sys_prompt.format("Describe the image")], [x["pred"] for x in sampled]
                 
                 batch = simple_make_inputs(tok, query_inputs, image_processor, image_ids, model)
-                
-                # pad_token_id = tok.pad_token_id
-                # outputs = model.generate(**batch, do_sample=False, max_new_tokens=36,
-                #                   pad_token_id=pad_token_id)
-                # outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
-                # preds = [tok.decode(output) for output in outputs]
-                # preds = [pred.replace(query_input, "").strip() for pred, query_input in zip(preds, query_inputs)]
-                # batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
                 batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
                 pad_token_id = 0
-                # print(batches)
                 outputs = [model.generate(**batches[i], do_sample=False, max_new_tokens=36,
                                   pad_token_id=0)[0] for i in range(len(batch["input_ids"]))]
                 outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
                 
                 preds = tok.batch_decode(outputs, skip_special_tokens=True)
-                preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]    
-                
-                
+                preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]
+
                 retain_rate_pre = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
-                # print(image_ids)
-                # print(query_inputs)
-                # print(preds)
-                # print(sampled_targets)
                 preds_preedit = preds
+
+                print(query_inputs)
+                print(preds)
+             
         
                 
-                query_inputs, sampled_targets, image_ids = ["Answer the question in one word:\n Question: {} Answer:".format(record['neighborhood_prompts'][i]['prompt'].replace("nq question: ","")) for i in range(len(record['neighborhood_prompts']))], [record['neighborhood_prompts'][i]['target'] for i in range(len(record['neighborhood_prompts']))], [request['image_id'] for i in range(len(record['neighborhood_prompts']))]
+                query_inputs, sampled_targets, image_ids = ["Answer the question in one word:\n Question: {} Answer:".format(record['neighborhood_prompts'][i]['prompt'].replace("nq question: ","")) for i in range(len(record['neighborhood_prompts']))], [record['neighborhood_prompts'][i]['target'] for i in range(len(record['neighborhood_prompts']))],  [request['image_id'] for i in range(len(record['neighborhood_prompts']))]
                 
                 
                 batch = simple_make_inputs(tok, query_inputs, image_processor, image_ids, model)
-                # outputs = model.generate(**batch, do_sample=False, max_new_tokens=36,
-                #                   pad_token_id=pad_token_id)
-                # outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
-                # preds = [tok.decode(output) for output in outputs]
-                # preds = [pred.replace(query_input, "").strip() for pred, query_input in zip(preds, query_inputs)]
-
-                # batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
                 batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
                 pad_token_id = 0
                 outputs = [model.generate(**batches[i], do_sample=False, max_new_tokens=36,
@@ -954,7 +955,13 @@ def main(
                 outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
                 
                 preds = tok.batch_decode(outputs, skip_special_tokens=True)
-                preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]                    
+                preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]
+
+                # outputs = model.generate(**batch, do_sample=False, max_new_tokens=36,
+                #                   pad_token_id=pad_token_id)
+                # outputs = [list(filter(lambda x: x != pad_token_id, output)) for output in outputs]
+                # preds = [tok.decode(output) for output in outputs]
+                # preds = [pred.replace(query_input, "").strip() for pred, query_input in zip(preds, query_inputs)]
                 retain_rate_neighborhood_pre = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
 
                 preds_preedit_neighborhood = preds
@@ -1058,7 +1065,7 @@ def main(
             
             if args.ft_after_edit:
                 print("Executing post-edit LORA fine-tuning")
-                defense = "fact_erasure"
+                defense = "error_injection"
                 # if args.fact_erasure:
                 #     defense = "fact_erasure"
 
@@ -1072,7 +1079,7 @@ def main(
                 #     if p.requires_grad:
                 #         print(n)  
                 with torch.enable_grad():
-                    edited_model, _ = easy_fine_tuning(edited_model, tok, image_processor, defense, sample_data=lora_sample_data, image_folder=".", learning_rate=2e-4, num_train_epochs=1, bf16=False)
+                    edited_model, _ = easy_fine_tuning(edited_model, tok, image_processor, "orig", defense, sample_data=lft_data, image_folder=".", learning_rate=args.lora_lr, num_train_epochs=args.epoch, margin_loss=args.margin_loss, entropy_loss=args.entropy_loss,  bf16=False)
 
                 # print("required+grad_5")                
                 # for n, p in edited_model.named_parameters():
@@ -1118,19 +1125,20 @@ def main(
             
             if args.retain_rate:
                 
+                if args.retain_rate:
+                
                 # query_inputs, sampled_targets = [x['requested_rewrite']['prompt'].format(x['requested_rewrite']['subject']) for x in sampled], [x['requested_rewrite']['target_true']['str'] for x in sampled]
-                # query_inputs, sampled_targets = ["Answer the question in one word:\n Question: {} Answer:".format(x["src"]) for x in sampled], [x["pred"] for x in sampled]
-                query_inputs, sampled_targets, image_ids = ["Answer the question in one word:\n Question: {} Answer:".format(x["src"]) for x in sampled], [x["pred"] for x in sampled], [x["image_id"] for x in sampled] 
+                query_inputs, sampled_targets, image_ids = ["Answer the question in one word:\n Question: {} Answer:".format(x["src"]) for x in sampled], [x["pred"] for x in sampled], [x["image_id"] for x in sampled]
 
+                
                 batch = simple_make_inputs(tok, query_inputs, image_processor, image_ids, model)
                 # pad_token_id = tok.pad_token_id
                 # outputs = edited_model.generate(**batch, do_sample=False, max_new_tokens=36, pad_token_id=pad_token_id)
-                # outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
+                # outputs = [list(filter(lambda x: x != pad_token_id, output)) for output in outputs]
                 # preds = [tok.decode(output) for output in outputs]
                 # preds = [pred.replace(query_input, "").strip() for pred, query_input in zip(preds, query_inputs)]
-                # print(preds)
-
-                # batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                # print(batches[0]['input_ids'].dtype)
+                # exit()
                 batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
                 pad_token_id = 0
                 outputs = [model.generate(**batches[i], do_sample=False, max_new_tokens=36,
@@ -1138,31 +1146,23 @@ def main(
                 outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
                 
                 preds = tok.batch_decode(outputs, skip_special_tokens=True)
-                preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]
-
-
+                preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]    
                 retain_rate = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
-                # print(image_ids)
-                # print(query_inputs)
-                # print(preds)
-                # print(sampled_targets)
                 actual_retain_rate =  fewshot_accuracy_sum(preds, preds_preedit)/len(preds)
                 
         
                 
                 # query_inputs, sampled_targets = record['neighborhood_prompts'], [record['requested_rewrite']['target_true']['str'] for x in range(len(record['neighborhood_prompts']))]
                 # query_inputs, sampled_targets = ["Answer the question in one word:\n Question: {} Answer:".format(record['neighborhood_prompts'][0]['prompt'].replace("nq question: ",""))], [record['requested_rewrite']['target_true']['str']]
-                # query_inputs, sampled_targets = ["Answer the question in one word:\n Question: {} Answer:".format(record['neighborhood_prompts'][i]['prompt'].replace("nq question: ","")) for i in range(len(record['neighborhood_prompts']))], [record['neighborhood_prompts'][i]['target'] for i in range(len(record['neighborhood_prompts']))]
-                query_inputs, sampled_targets, image_ids = ["Answer the question in one word:\n Question: {} Answer:".format(record['neighborhood_prompts'][i]['prompt'].replace("nq question: ","")) for i in range(len(record['neighborhood_prompts']))], [record['neighborhood_prompts'][i]['target'] for i in range(len(record['neighborhood_prompts']))],  [request['image_id'] for i in range(len(record['neighborhood_prompts']))]
+                query_inputs, sampled_targets, image_ids = ["Answer the question in one word:\n Question: {} Answer:".format(record['neighborhood_prompts'][i]['prompt'].replace("nq question: ","")) for i in range(len(record['neighborhood_prompts']))], [record['neighborhood_prompts'][i]['target'] for i in range(len(record['neighborhood_prompts']))], [request['image_id'] for i in range(len(record['neighborhood_prompts']))]
                 
                 
                 batch = simple_make_inputs(tok, query_inputs, image_processor, image_ids, model)
                 # outputs = edited_model.generate(**batch, do_sample=False, max_new_tokens=36,
                 #                   pad_token_id=pad_token_id)
-                # outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
+                # outputs = [list(filter(lambda x: x != pad_token_id, output)) for output in outputs]
                 # preds = [tok.decode(output) for output in outputs]
                 # preds = [pred.replace(query_input, "").strip() for pred, query_input in zip(preds, query_inputs)]
-                # batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
                 batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
                 pad_token_id = 0
                 outputs = [model.generate(**batches[i], do_sample=False, max_new_tokens=36,
@@ -1171,12 +1171,7 @@ def main(
                 
                 preds = tok.batch_decode(outputs, skip_special_tokens=True)
                 preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]
-
                 retain_rate_neighborhood = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
-                # print(image_ids)
-                # print(query_inputs)
-                # print(preds)
-                # print(sampled_targets)
                 actual_retain_rate_neighborhood = fewshot_accuracy_sum(preds, preds_preedit_neighborhood)/len(preds)
 
 
@@ -1189,7 +1184,9 @@ def main(
                     # print(request['prompt'].format(request['subject']))
                     # attack_paraps = [sys_prompt.format(attack_parap) for attack_parap in attack_paraps]
                     if args.attack == "img":
-                        batch = simple_make_inputs_image(tok, attack_paraps, image_processor, image_id, model, img_attack_parap=args.img_attack_parap)
+                        image_ids = [image_id]*len(attack_paraps)
+                        case_ids = [case_id]*len(attack_paraps)
+                        batch = simple_make_inputs_image(tok, attack_paraps, image_processor, image_ids, case_ids, model, img_attack_parap=args.img_attack_parap)
                 if args.attack=="multimodal" or args.attack=="bb" or args.attack=="mg" or args.attack=="jailbreak":    
                     if args.attack == "mg" or args.attack == "multimodal":
                         key = request['prompt'].format(request['subject']).replace("Answer the question in one word\n Question: ","").replace(" Answer:","")
@@ -1221,7 +1218,9 @@ def main(
 
                     # attack_paraps = [sys_prompt.format(attack_parap) for attack_parap in attack_paraps]
                     if args.attack=="multimodal" or args.attack=="jailbreak":
-                        batch = simple_make_inputs_image(tok, attack_paraps, image_processor, image_id, model, img_attack_parap=args.img_attack_parap)
+                        image_ids = [image_id]*len(attack_paraps)
+                        case_ids = [case_id]*len(attack_paraps)
+                        batch = simple_make_inputs_image(tok, attack_paraps, image_processor, image_ids, case_ids, model, img_attack_parap=args.img_attack_parap)
                     else:
                         image_ids = [image_id]*len(attack_paraps)
                         batch = simple_make_inputs(tok, attack_paraps, image_processor, image_ids, model)
@@ -1230,13 +1229,13 @@ def main(
                 # exit()
                 pad_token_id = tok.pad_token_id
                 pad_token_id = pad_token_id if pad_token_id else 0
-                np.random.seed(args.seed+2)
-                torch.cuda.set_device(device)
-                torch.random.manual_seed(args.seed+2)
-                torch.cuda.manual_seed_all(args.seed+2)
+                # np.random.seed(args.seed+2)
+                # torch.cuda.set_device(device)
+                # torch.random.manual_seed(args.seed+2)
+                # torch.cuda.manual_seed_all(args.seed+2)
                 #   outputs = edited_model.generate(**batch, do_sample=True, num_beams=1, max_new_tokens=1,
                 #                       pad_token_id=pad_token_id, num_return_sequences=1, top_k=3)
-                torch.manual_seed(42)
+                # torch.manual_seed(42)
                 #   set_seed(42)
 
                 # batches = [dict(input_ids=batch['input_ids'][i:i+1], inputs=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
@@ -1499,6 +1498,28 @@ if __name__ == "__main__":
         default=4,
         help="top-k metric",
     )
+
+    parser.add_argument(
+        "--lora_r",
+        "-lora_r",
+        type=int,
+        default=1,
+        help="--lora_r",
+    )
+    parser.add_argument(
+        "--lora_alpha",
+        "-lora_alpha",
+        type=int,
+        default=1,
+        help="--lora_alpha",
+    )
+    parser.add_argument(
+        "--lora_lr",
+        "-lora_lr",
+        type=float,
+        default=1e-2,
+        help="--lora_lr",
+    )
     parser.add_argument(
         "--do_essence_tests",
         type=int,
@@ -1614,6 +1635,11 @@ if __name__ == "__main__":
         default=0,
     )
     parser.add_argument(
+        "--epoch",
+        type=int,
+        default=5,
+    )
+    parser.add_argument(
         "--num_attack_parap",
         type=int,
         default=5,
@@ -1703,6 +1729,9 @@ if __name__ == "__main__":
     if '7b' in model_name:
         central_layers = list(range(0, 32, 4)) #+ [5, 27]
         num_layers = 32
+    if '13b' in model_name:
+        central_layers = list(range(0, 40, 4)) #+ [5, 27]
+        num_layers = 40
     if alg_name == 'FT' and 1 in window_sizes and not args.fact_forcing:
         central_layers = [-1] + central_layers
     if args.edit_layer > -2:

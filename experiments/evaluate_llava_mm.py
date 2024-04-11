@@ -59,8 +59,8 @@ from llava.constants import (
 
 # from transformer_utils.src.transformer_utils.util.module_utils import get_child_module_by_names
 from transformer_utils.util.module_utils import get_child_module_by_names
-sys.path.append("/nas-ssd2/vaidehi/nlp13/")
-# from LORA.lora_ft import easy_fine_tuning, get_lora_sample_data
+# sys.path.append("/nas-ssd2/vaidehi/nlp13/")
+from lora_ft import easy_fine_tuning, get_lora_sample_data
 
 lora_sample_data = json.load(open("lora_sample.json", "r"))
 
@@ -68,6 +68,7 @@ ALG_DICT = {
     "ROME": (ROMEHyperParams, apply_rome_to_model),
     "MEMIT": (MEMITHyperParams, apply_memit_to_model),
     "FT": (FTHyperParams, apply_ft_to_model),
+    "mmedit": (MENDQADataset, compute_rewrite_quality_counterfact),
     # "KN": (KNHyperParams, apply_kn_to_model),
     # "MEND": (MENDHyperParams, MendRewriteExecutor().apply_to_model),
     # "KE": (EFKHyperParams, EfkRewriteExecutor().apply_to_model),
@@ -325,6 +326,58 @@ def get_metrics(model, input_ids, target_ids, images_tensor, k, layers_wb_attack
     # print("Metrics computed")
     return top5, bottom5, top1, bottom1, target_prob
 
+def get_metrics_batch(model, batch, target_ids, k, layers_wb_attack):
+    hidden_states = model(**batch, output_hidden_states=True).hidden_states
+    out = torch.stack(hidden_states, dim=0)
+    lens_decoder = make_decoder(model, decoder_layer_names=['final_layernorm', 'lm_head'])
+    decoder_out = lens_decoder(out)
+    layer_logits = torch.nn.Softmax(dim=-1)(decoder_out)
+    layers_wb_attack = torch.tensor(layers_wb_attack, device="cuda")
+    layer_logits = torch.index_select(layer_logits, 0, layers_wb_attack)  
+    if args.attack == "pd":
+        layer_logits = torch.diff(layer_logits, dim=0)
+        print("diff")
+    sorted_layer_logits, _ = torch.sort(layer_logits, -1)
+    min_topk_prob = sorted_layer_logits[:,0,-1,-k]
+    max_bottomk_prob = sorted_layer_logits[:,0,-1,(k-1)]
+    top_prob = sorted_layer_logits[:,0,-1,-1]
+    bottom_prob = sorted_layer_logits[:,0,-1,0]
+    target_prob = layer_logits[:,0,-1,target_ids[0][0]]
+    print("target prob")
+    print(target_prob)
+    top5 = torch.ge(target_prob, min_topk_prob)
+    bottom5 = torch.ge(max_bottomk_prob, target_prob)
+
+    top1 = torch.ge(target_prob, top_prob)
+    bottom1 = torch.ge(bottom_prob, target_prob)
+    # print(min_topk_prob.shape)
+    # print(max_bottomk_prob.shape)
+    # print(target_prob.shape)
+    # lr = list((top5 == True).nonzero().cpu().numpy())
+    # print([x[0] for x in lr])
+    
+    # with open('/nas-ssd2/vaidehi/nlp13/belief-localization/third_party/pd5_layers.pkl', mode='rb') as feedsjson:
+    #     feeds = pickle.load(feedsjson)
+    #     top5_lr = list((top5 == True).nonzero().cpu().numpy())
+    #     bottom5_lr = list((bottom5 == True).nonzero().cpu().numpy())
+    #     top1_lr = list((top1 == True).nonzero().cpu().numpy())
+    #     bottom1_lr = list((bottom1 == True).nonzero().cpu().numpy())
+    
+    # entry = {'top5':[x[0] for x in top5_lr], 'bottom5': [x[0] for x in bottom5_lr], 'top1': [x[0] for x in top1_lr], 'bottom1': [x[0] for x in bottom1_lr]}
+    # feeds.append(entry)
+    # pickle.dump(feeds, open('/nas-ssd2/vaidehi/nlp13/belief-localization/third_party/pd5_layers.pkl', mode='wb'))
+    # with open('/nas-ssd2/vaidehi/nlp13/belief-localization/third_party/hp5_layers.json', mode='a+') as feedsjson:
+    #     feeds = json.load(feedsjson)
+    #     entry = {'top5':(top5 == True).nonzero(), 'bottom5': (bottom5 == True).nonzero(), 'top1': (top1 == True).nonzero(), 'bottom1': (bottom1 == True).nonzero()}
+    #     feeds.append(entry)
+    #     print(feeds)
+    #     json.dump(feeds, feedsjson)
+    print((top5 == True).nonzero())
+    print((bottom5 == True).nonzero())
+    # print(target_prob)
+    # print(bottom5)      
+    # print("Metrics computed")
+    return top5, bottom5, top1, bottom1, target_prob
 
 def get_override_hparams(args, window_size, central_layer, alg_name):
   # embeddings are being FTed
@@ -437,7 +490,9 @@ def sweep_experiment_name(args, model_name, alg_name, ds_name, sweep_params):
     obj = '_dummy_{}'.format(args.attack)
   else:
     obj = '_error-inj_{}_'.format(args.attack)
-  return f'{exp_name}{obj}_n{args.dataset_size_limit}_top-{args.k}_lowrank-{args.low_rank}'
+  exp_name = exp_name + obj
+  return f'{exp_name}_n{args.dataset_size_limit}_top-{args.k}_lowrank-{args.low_rank}_lftedit{args.lft_edit}_cftedit{args.cft_edit}_ml{args.margin_loss}_el{args.entropy_loss}_fae{args.ft_after_edit}'
+
 
 def ROME_experiment_name(args, model_name, alg_name, ds_name, hparams_to_add):
   exp_name = f'{model_name}/{alg_name}_outputs_{ds_name}'
@@ -457,17 +512,17 @@ def ROME_experiment_name(args, model_name, alg_name, ds_name, hparams_to_add):
         _v = "embeds"
     exp_name += f"_{k[:5]}-{_v}"
   if args.fact_erasure and args.margin_loss:
-    obj = '_fact-erasure_margin_layers'+str([args.margin_layers[0], args.margin_layers[-1]])
+    obj = '_fact-erasure_margin_layers'+str([args.margin_layers[0], args.margin_layers[-1]])+'_{}'.format(args.attack)
   elif args.fact_erasure and args.entropy_loss:
-    obj = '_fact-erasure_entropy_layers'+str([args.entropy_layers[0], args.entropy_layers[-1]])
+    obj = '_fact-erasure_entropy_layers'+str([args.entropy_layers[0], args.entropy_layers[-1]])+'_{}'.format(args.attack)
   elif args.fact_erasure:
-    obj = '_fact-erasure_no_margin_no_entropy' 
+    obj = '_fact-erasure_no_margin_no_entropy_{}'.format(args.attack) 
   elif args.dummy_string:
     obj = '_dummy_{}'.format(args.attack)
   else:
     obj = '_error-inj_{}_'.format(args.attack)
   exp_name = exp_name + obj
-  return f'{exp_name}{obj}_n{args.dataset_size_limit}_top-{args.k}_lowrank-{args.low_rank}'
+  return f'{exp_name}_n{args.dataset_size_limit}_top-{args.k}_lowrank-{args.low_rank}_lftedit{args.lft_edit}_cftedit{args.cft_edit}_ml{args.margin_loss}_el{args.entropy_loss}_fae{args.ft_after_edit}'
 
 def ROME_experiment_name_from_override_params(args, model_name, alg_name, ds_name, override_hparams, hparams_class):
   _model_name = model_name.replace('/', '_')
@@ -885,7 +940,7 @@ def main(
                 # print(request['target_new']["str"])
                 # print(request['target_true']["str"])
                 # request['target_new'] = request['target_true']
-                request['target_new']["str"] = "I don't know"
+                request['target_new']["str"] = "dummy"
             elif args.fact_amplification:
                 request['request_baseline'] = mt.tokenizer.eos_token # arbitrary token, won't use these metrics anyway
                 request['target_new'] = request['target_true']
@@ -902,7 +957,7 @@ def main(
 
             # language setting
             if args.use_img_token:
-                input_ids = torch.as_tensor(tokenizer_image_token(sys_prompt.format(request['prompt'].format(request['subject'])), tok, IMAGE_TOKEN_INDEX)).view(1, -1).to(device)
+                batch = simple_make_inputs(tok, [request['prompt'].format(request['subject'])], image_processor, [request['image_id']], model)
             else:
                 input_ids = torch.as_tensor(tok.encode(request['prompt'].format(request['subject']))).view(1, -1).to(device)
 
@@ -913,10 +968,12 @@ def main(
             target_ids = torch.as_tensor(tok.encode(request['target_true']['str']))[1:].view(1, -1).to(device)   
 
             # image setting    
-            img_path = get_image_path(request['image_id'])
+            if not args.use_img_token:
+                img_path = get_image_path(request['image_id'])
 
-            images = load_images(image_files=[img_path])#["/nas-ssd2/dataset/coco2017/train2017/000000357587.jpg"])#"/nas-ssd2/dataset/coco2017/train2017/000000339761.jpg"])#"/nas-ssd2/dataset/coco2017/val2017/000000297147.jpg"])
-            images_tensor = process_images(images, image_processor,model.config).to(model.device, dtype=torch.float16)
+
+                images = load_images(image_files=[img_path])#["/nas-ssd2/dataset/coco2017/train2017/000000357587.jpg"])#"/nas-ssd2/dataset/coco2017/train2017/000000339761.jpg"])#"/nas-ssd2/dataset/coco2017/val2017/000000297147.jpg"])
+                images_tensor = process_images(images, image_processor,model.config).to(model.device, dtype=torch.float16)
             # print(images_tensor.shape)
             # images_tensor = preprocess_images(images, return_tensors='pt')['pixel_values'].half().to(device)
             # images_tensor = images_tensor.expand(torch.tensor(input_ids).shape[0], -1, -1, -1)  
@@ -948,7 +1005,7 @@ def main(
 
             if args.debug:
                 # print(input_ids.shape)
-                top_k_pre, bottom_k_pre, top_1_pre, bottom_1_pre, target_prob_pre = get_metrics(model, input_ids, target_ids, images_tensor, args.k, layers_wb_attack)
+                top_k_pre, bottom_k_pre, top_1_pre, bottom_1_pre, target_prob_pre = get_metrics_batch(model, batch, target_ids, args.k, layers_wb_attack)
 
                 # print(top_k_pre, bottom_k_pre, top_1_pre, bottom_1_pre, target_prob_pre)
             
@@ -1056,11 +1113,14 @@ def main(
 
               elif args.lft_edit:
                 print("Executing edit method: LORA fine-tuning")
-                defense = "fact_erasure"
-                lft_data = get_lora_sample_data(request)
-                import pdb; pdb.set_trace()
-                edited_model, weights_copy = easy_fine_tuning(model, tok, image_processor, defense, sample_data=lft_data, image_folder=".", learning_rate=2e-4, num_train_epochs=5, bf16=False)
-                import pdb; pdb.set_trace()
+                if args.dummy_string:
+                    defense = "empty_response"
+                elif args.fact_erasure:
+                    defense = "fact_erasure"
+                else:
+                    defense = "error_injection"
+                lft_data = get_lora_sample_data(request, defense)
+                edited_model, weights_copy = easy_fine_tuning(model, tok, image_processor, "orig", defense, sample_data=lft_data, image_folder=".", learning_rate=args.lora_lr, num_train_epochs=args.epoch, margin_loss=args.margin_loss, entropy_loss=args.entropy_loss, edit_vision=args.edit_vision, bf16=False)
                       
 
             
@@ -1075,7 +1135,7 @@ def main(
             
             if args.ft_after_edit:
                 print("Executing post-edit LORA fine-tuning")
-                defense = "fact_erasure"
+                # defense = "fact_erasure"
                 # if args.fact_erasure:
                 #     defense = "fact_erasure"
 
@@ -1089,8 +1149,7 @@ def main(
                 #     if p.requires_grad:
                 #         print(n)  
                 with torch.enable_grad():
-                    edited_model, _ = easy_fine_tuning(edited_model, tok, image_processor, defense, sample_data=lora_sample_data, image_folder=".", learning_rate=2e-4, num_train_epochs=1, bf16=False)
-
+                    edited_model, _ = easy_fine_tuning(edited_model, tok, image_processor, "orig", "error_injection", sample_data=lora_sample_data, image_folder=".", learning_rate=args.lora_lr, num_train_epochs=args.epoch, margin_loss=args.margin_loss, entropy_loss=args.entropy_loss,  bf16=False)
                 # print("required+grad_5")                
                 # for n, p in edited_model.named_parameters():
                 #     if p.requires_grad:
@@ -1164,7 +1223,7 @@ def main(
               with torch.no_grad(): 
                 # input_ids = torch.as_tensor(tok.encode(request['prompt'].format(request['subject']))).view(1, -1).to(device)
                 if args.use_img_token:
-                    input_ids = torch.as_tensor(tokenizer_image_token(sys_prompt.format(request['prompt'].format(request['subject'])), tok, IMAGE_TOKEN_INDEX)).view(1, -1).to(device)
+                    batch = simple_make_inputs(tok, [request['prompt'].format(request['subject'])], image_processor, [request['image_id']], model)
                 else:
                     input_ids = torch.as_tensor(tok.encode(request['prompt'].format(request['subject']))).view(1, -1).to(device)
              
@@ -1188,7 +1247,7 @@ def main(
                 # print(target_ids)
                 # print(tok.decode(target_ids[0]))
                 # exit()
-                top_k, bottom_k, top_1, bottom_1, target_prob = get_metrics(edited_model, input_ids, target_ids, images_tensor, args.k, layers_wb_attack)
+                top_k, bottom_k, top_1, bottom_1, target_prob = get_metrics_batch(model, batch, target_ids, args.k, layers_wb_attack)        
                 # if args.debug:
                 #     print(top_k, bottom_k, top_1, bottom_1, target_prob)
                 #     exit()
@@ -1320,6 +1379,11 @@ if __name__ == "__main__":
         help="compute retain rate",
     )
     parser.add_argument(
+        "--edit_vision",
+        action="store_true",
+        help="compute retain rate",
+    )
+    parser.add_argument(
         "--lft_edit",
         action="store_true",
         help="compute retain rate",
@@ -1328,6 +1392,18 @@ if __name__ == "__main__":
         "--cft_edit",
         action="store_true",
         help="compute retain rate",
+    )
+    parser.add_argument(
+        "--lora_lr",
+        "-lora_lr",
+        type=float,
+        default=1e-2,
+        help="--lora_lr",
+    )
+    parser.add_argument(
+        "--epoch",
+        type=int,
+        default=5,
     )
     parser.add_argument(
         "--continue_from_run",
@@ -1404,11 +1480,6 @@ if __name__ == "__main__":
         type=int,
         default=4,
         help="top-k metric",
-    )
-    parser.add_argument(
-        "--edit_vision",
-        action="store_true",
-        help="edit_vision",
     )
     parser.add_argument(
         "--model_parap",
@@ -1571,7 +1642,7 @@ if __name__ == "__main__":
     hparams_class, _ = ALG_DICT[alg_name]
     ds_name = args.ds_name
     window_sizes = [int(x) for x in args.window_sizes.split()]
-    layers_wb_attack = [int(x) for x in args.layers_wb_attack.split(',')]
+    layers_wb_attack = [int(x) for x in args.layers_wb_attack.split()]
 
     if 'gpt2' in model_name:
         central_layers = list(range(0, 48, 4)) + [17, 47]

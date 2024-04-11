@@ -69,6 +69,7 @@ class MENDQADataset:
                 {
                     "case_id": i,
                     "requested_rewrite": {
+                        "id": i,
                         "prompt": prompt,
                         "subject": record["subject"],
                         "image_id": record["image_id"],

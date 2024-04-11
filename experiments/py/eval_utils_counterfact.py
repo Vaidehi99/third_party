@@ -57,11 +57,12 @@ def compute_rewrite_quality_counterfact(
 
     rewrite_prompts = [record["requested_rewrite"]["prompt"].format(subject)]
     paraphrase_image_prompts = [record["requested_rewrite"]["prompt"].format(subject)]
-    paraphrase_prompts = record["paraphrase_prompts"]
+    paraphrase_prompts = record["paraphrase_prompts"][:3]
     neighborhood_prompts = record["neighborhood_prompts"]
     attribute_prompts = record["attribute_prompts"]
     generation_prompts = record["generation_prompts"]
     image_id = record["requested_rewrite"]["image_id"]
+    sample_id = record["requested_rewrite"]["id"]
     # alt_ans = record["requested_rewrite"]["alt_ans"][0]
 
     # import pdb; pdb.set_trace()
@@ -92,12 +93,15 @@ def compute_rewrite_quality_counterfact(
 
     # print(list(chain(*prob_prompts)))
     # Flatten all the evaluated prefixes into one list.
+    print(len(paraphrase_prompts))
+    print(len(list(chain(*prob_prompts))))
+    # Flatten all the evaluated prefixes into one list.
     probs = test_batch_prediction(
-        args, model, tok, image_processor, list(chain(*prob_prompts)), image_id, target_new["str"], request_baseline, subject
+        args, model, tok, image_processor, list(chain(*prob_prompts)), image_id, sample_id, target_new["str"], request_baseline, subject
     )
 
     probs_image = test_batch_prediction_image(
-        args, model, tok, image_processor, list(chain(*prob_prompts_image)), [image_id], target_new["str"], request_baseline, subject
+        args, model, tok, image_processor, list(chain(*prob_prompts_image)), [image_id], [sample_id], target_new["str"], request_baseline, subject
     )
     # print(target_new["str"])
     # exit()
@@ -154,6 +158,7 @@ def test_batch_prediction(
     image_processor,
     prefixes: typing.List[str],
     image_id,
+    sample_id,
     target_new: str,
     request_baseline: str,
     subject: str,
@@ -198,6 +203,8 @@ def test_batch_prediction(
     
     repeated_prefixes = list(itertools.chain(*[[prefix, prefix] for prefix in prefixes]))
     image_ids = [image_id]*len(repeated_prefixes)
+    sample_ids = [sample_id]*len(repeated_prefixes)
+
 
 
     batch = make_inputs(tok, image_processor, repeated_prefixes, image_ids, model, args.img_attack_parap, targets)    
@@ -219,6 +226,7 @@ def test_batch_prediction_image(
     image_processor,
     prefixes: typing.List[str],
     image_id,
+    sample_id,
     target_new: str,
     request_baseline: str,
     subject: str,
@@ -265,7 +273,7 @@ def test_batch_prediction_image(
     repeated_prefixes = list(itertools.chain(*[[prefix, prefix] for prefix in prefixes]))
     # print(repeated_prefixes)
     # image_ids = [image_id]*len(repeated_prefixes)
-    batch = make_inputs_image(tok, image_processor, repeated_prefixes, image_id, model, args.img_attack_parap, targets)    
+    batch = make_inputs_image(tok, image_processor, repeated_prefixes, image_id, sample_id, model, args.img_attack_parap, targets)        
     with nethook.TraceDict(model, [embed_layername], edit_output=noise_embeddings) if args.fact_forcing or args.weight_based_tracing else nullcontext():
         results = score_from_batch(model, batch, return_log_probs=True)
         nll = -results

@@ -196,7 +196,7 @@ def simple_make_inputs_old(tokenizer, prompts, image_processor, image_id, model,
         images = images_tensor
     )
 
-def simple_make_inputs_image(tokenizer, prompts, image_processor, image_id, model, img_attack_parap, device="cuda"):
+def simple_make_inputs_image(tokenizer, prompts, image_processor, image_ids, sample_ids, model, img_attack_parap, device="cuda"):
     # token_lists = [tokenizer.encode(p, add_special_tokens=False) for p in prompts]
     token_lists = [tokenizer_image_token(sys_prompt.format(p), tokenizer, IMAGE_TOKEN_INDEX) for p in prompts]
     maxlen = max(len(t) for t in token_lists)
@@ -210,7 +210,8 @@ def simple_make_inputs_image(tokenizer, prompts, image_processor, image_id, mode
     # img_path = "/nas-ssd2/dataset/coco2017/val2017/{}"
     attack_images = []
 
-    attack_images += get_image_path_parap(image_id, img_attack_parap)
+    for k in range(len(image_ids)):
+      attack_images += get_image_path_parap(image_ids[k], sample_ids[k], img_attack_parap)
 
     images = load_images(image_files=attack_images)#["/nas-ssd2/dataset/coco2017/train2017/000000357587.jpg"])#"/nas-ssd2/dataset/coco2017/train2017/000000339761.jpg"])#"/nas-ssd2/dataset/coco2017/val2017/000000297147.jpg"])
     # images_tensor = image_processor.preprocess(images, return_tensors='pt')['pixel_values'].half().to(device)
@@ -232,10 +233,15 @@ def simple_make_inputs_image(tokenizer, prompts, image_processor, image_id, mode
     #   input_ids = [element for i in range(num_images) for element in input_ids]
     #   attention_mask = [element for i in range(num_images) for element in attention_mask]
 
-    assert(images_tensor.shape[0]==len(input_ids))
+    # assert(images_tensor.shape[0]==len(input_ids))
 
 
-
+    if images_tensor.shape[0]!=len(input_ids):
+        num_images = images_tensor.shape[0]
+        images_tensor = torch.cat([images_tensor for i in range(len(input_ids))], 0) #images_tensor.expand(net_size, -1, -1, -1)
+      
+        input_ids = [element for i in range(num_images) for element in input_ids]
+        attention_mask = [element for i in range(num_images) for element in attention_mask]
     
 
     return dict(
@@ -246,7 +252,7 @@ def simple_make_inputs_image(tokenizer, prompts, image_processor, image_id, mode
 
 
 
-def make_inputs(tokenizer, image_processor, prompts, image_ids, model, img_attack_parap, targets=None, device="cuda"):
+def make_inputs(tokenizer, image_processor, prompts, image_ids sample_ids,, model, img_attack_parap, targets=None, device="cuda"):
     # prompts = [sys_prompt.format(p) for p in prompts]
 
     # make tensor inputs for pytorch model with right-padding
@@ -324,8 +330,8 @@ def make_inputs(tokenizer, image_processor, prompts, image_ids, model, img_attac
       #   img_path = "/nas-ssd2/dataset/coco2017/val2017/{}.jpg".format(str(image_id).zfill(12))
       # img_path = get_image_path(image_id)
       img_paths = []
-      for img_id in image_ids:
-        img_paths += get_image_path_parap(img_id, img_attack_parap) 
+      for k in range(len(image_ids)):
+        img_paths += get_image_path_parap(image_ids[k], sample_ids[k], img_attack_parap) 
 
  
 
@@ -361,8 +367,134 @@ def make_inputs(tokenizer, image_processor, prompts, image_ids, model, img_attac
           images = images_tensor
       )
     
+def make_inputs_lora(tokenizer, image_processor, prompts, image_ids, sample_ids, model, img_attack_parap, targets=None, device="cuda"):
+    # prompts = [sys_prompt.format(p) for p in prompts]
 
-def make_inputs_image(tokenizer, image_processor, prompts, image_ids, model, img_attack_parap, targets=None, device="cuda"):
+    # make tensor inputs for pytorch model with right-padding
+    # i=0
+    # print(targets[i])
+    # print(tokenizer.encode(targets[i], add_special_tokens=False))
+    # print(tokenizer.decode(tokenizer.encode(targets[i], add_special_tokens=False)[:-1]))
+    # print(prompts[i]+tokenizer.decode(tokenizer.encode(targets[i], add_special_tokens=False)[:-1]))
+    # print(len(prompts))
+    # print(tokenizer.encode(targets[0], add_special_tokens=False))
+    prompts = [prompts[i]+tokenizer.decode(tokenizer.encode(targets[i], add_special_tokens=False)[:-1]) for i in range(len(prompts))]
+    # print(prompts)
+    # print(targets)
+    
+    # token_lists = [tokenizer.encode(p, add_special_tokens=False) for p in prompts]
+    token_lists = [tokenizer_image_token(sys_prompt.format(p), tokenizer, IMAGE_TOKEN_INDEX) for p in prompts]
+    # print(token_lists[0])
+    # print(len(token_lists[0]))
+    # exit()
+    if "[PAD]" in tokenizer.all_special_tokens:
+        pad_id = tokenizer.all_special_ids[tokenizer.all_special_tokens.index("[PAD]")]
+    elif tokenizer.pad_token_id is not None:
+        pad_id = tokenizer.pad_token_id
+    else:
+        pad_id = 2
+    # input_lens = len(tokenizer.encode("A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions. USER: <image>\n"))
+
+    # if targets is None:
+    #   maxlen = max(len(t) for t in token_lists)
+    #   input_ids = [token_lists[i][:input_lens-2]+[pad_id] * (maxlen - len(token_lists[i])) + token_lists[i][input_lens-2:] for i in range(len(token_lists))]
+      
+    #   # input_ids = [t + [pad_id] * (maxlen - len(t)) for t in token_lists]
+    #   attention_mask = [[1]*(input_lens-2) + [0] * (maxlen - len(t)) + [1] * (len(t)-input_lens-2) for t in token_lists]
+    #   return dict(
+    #       input_ids=torch.tensor(input_ids).to(device),
+    #       attention_mask=torch.tensor(attention_mask).to(device),
+    #   )
+    if targets is not None:
+      # print(targets)
+      # target_lists = [tokenizer.encode(" " + t) for t in targets]
+      target_lists = [tokenizer.encode(t, add_special_tokens=False) for t in targets]
+      # print(target_lists)
+      # print(tokenizer.decode(target_lists[0][0]))
+      
+      maxlen = max(len(p) + len(t) for p, t in zip(token_lists, target_lists))
+      # print(maxlen)
+      # print(len(token_lists[0]))
+      # exit()
+      combine_lists = [p + t for p, t in zip(token_lists, target_lists)]
+      # query_ids = [token_lists[i][:input_lens-2]+[pad_id] * (maxlen - len(token_lists[i])) + token_lists[i][input_lens-2:] for i in range(len(token_lists))]
+      query_ids = [t + [pad_id] * (maxlen - len(t)) for t in token_lists]
+      input_ids = [t + [pad_id] * (maxlen - len(t)) for t in combine_lists]
+      print(len(input_ids))
+      # query_ids = [[pad_id] * (maxlen - len(t)) + t for t in token_lists]
+      # input_ids = [[pad_id] * (maxlen - len(t)) + t for t in combine_lists]
+      # input_ids = [combine_lists[i][:input_lens-2]+[pad_id] * (maxlen - len(combine_lists[i])) + combine_lists[i][input_lens-2:] for i in range(len(combine_lists))]
+      attention_mask = [[1] * len(t) + [0] * (maxlen - len(t)) for t in combine_lists]
+      # attention_mask = [[0] * (maxlen - len(t)) + [1] * len(t) for t in combine_lists]
+
+      # attention_mask = [[1]*(input_lens-2) + [0] * (maxlen - len(t)) + [1] * (len(t)-input_lens+2) for t in token_lists]
+
+      target_ids = []
+      target_indicators = []
+
+
+      for input_ids_i, target_ids_i in zip(token_lists, target_lists):
+          target_indicators_i = [0]*len(input_ids_i) + [1]*len(target_ids_i) + [0]*(maxlen - len(input_ids_i)-len(target_ids_i))
+          target_indicators.append(target_indicators_i)
+          target_ids_i = [pad_id]*len(input_ids_i) + target_ids_i + [pad_id]*(maxlen - len(input_ids_i)-len(target_ids_i))
+          target_ids.append(target_ids_i)
+
+      # img_path = "/nas-ssd2/dataset/coco2017/val2017/{}"
+      # img_path = "/nas-ssd2/dataset/coco2017/train2017/{}.jpg".format(str(image_id).zfill(12))
+      # if not os.path.exists(img_path):
+      #   img_path = "/nas-ssd2/dataset/coco2017/val2017/{}.jpg".format(str(image_id).zfill(12))
+      # img_path = get_image_path(image_id)
+      img_paths = []
+      for k in range(len(image_ids)):
+        img_paths += get_image_path_parap(image_ids[k], sample_ids[k], img_attack_parap) 
+
+ 
+
+      images = load_images(image_files=img_paths) #["/nas-ssd2/dataset/coco2017/train2017/000000357587.jpg"])#"/nas-ssd2/dataset/coco2017/train2017/000000339761.jpg"])#"/nas-ssd2/dataset/coco2017/val2017/000000297147.jpg"])
+      # images_tensor = image_processor.preprocess(images, return_tensors='pt')['pixel_values'].half().to(device)
+      images_tensor = process_images(
+        images,
+        image_processor,
+        model.config
+      ).to(dtype=torch.float32)
+      # images_tensor = process_images(
+      #   images,
+      #   image_processor,
+      #   model.config
+      # ).to(device, dtype=torch.float16)
+
+
+      if images_tensor.shape[0]!=len(input_ids):
+        num_images = images_tensor.shape[0]
+        images_tensor = torch.cat([images_tensor for i in range(len(input_ids))], 0) #images_tensor.expand(net_size, -1, -1, -1)
+      
+        input_ids = [element for i in range(num_images) for element in input_ids]
+        attention_mask = [element for i in range(num_images) for element in attention_mask]
+        query_ids = [element for i in range(num_images) for element in query_ids]
+        target_ids = [element for i in range(num_images) for element in target_ids]
+        target_indicators = [element for i in range(num_images) for element in target_indicators]
+
+
+      assert(images_tensor.shape[0]==len(input_ids))
+
+      # print(torch.tensor(input_ids).shape)
+      # print(torch.tensor(target_ids).shape)
+      # print(torch.tensor(attention_mask).shape)
+      # print(torch.tensor(target_indicators).shape)
+      # print(images_tensor.shape)
+      # print(target_ids)
+      # print(target_indicators)
+   
+      return dict(
+          input_ids=torch.tensor(input_ids),#.to(device),
+          query_ids=torch.tensor(query_ids),#.to(device),
+          target_ids=torch.tensor(target_ids),#.to(device),
+          target_indicators=torch.tensor(target_indicators),#.to(device),
+          attention_mask=torch.tensor(attention_mask),#.to(device),
+          images = images_tensor
+      )
+
+def make_inputs_image(tokenizer, image_processor, prompts, image_ids, sample_ids, model, img_attack_parap, targets=None, device="cuda"):
     # make tensor inputs for pytorch model with right-padding
     # i=0
     # print(targets)
@@ -458,8 +590,8 @@ def make_inputs_image(tokenizer, image_processor, prompts, image_ids, model, img
 
         assert(len(image_ids)==1)
         img_paths = []
-        for img_id in image_ids:
-          img_paths += get_image_path_parap(img_id, img_attack_parap) 
+        for k in range(len(image_ids)):
+          img_paths += get_image_path_parap(image_ids[k], sample_ids[k], img_attack_parap) 
 
    
 
@@ -471,7 +603,7 @@ def make_inputs_image(tokenizer, image_processor, prompts, image_ids, model, img
         model.config
       ).to(model.device, dtype=torch.float16)
       
-        if True:
+        if images_tensor.shape[0]!=len(input_ids):
           num_images = images_tensor.shape[0]
           images_tensor = torch.cat([images_tensor for i in range(len(input_ids))], 0) #images_tensor.expand(net_size, -1, -1, -1)
       
