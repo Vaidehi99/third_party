@@ -207,7 +207,7 @@ def test_batch_prediction(
 
 
 
-    batch = make_inputs(tok, image_processor, repeated_prefixes, image_ids, model, args.img_attack_parap, targets)    
+    batch = make_inputs(tok, image_processor, repeated_prefixes, image_ids, sample_ids, model, args.img_attack_parap, targets)    
 
     # import pdb; pdb.set_trace()
     with nethook.TraceDict(model, [embed_layername], edit_output=noise_embeddings) if args.fact_forcing or args.weight_based_tracing else nullcontext():
