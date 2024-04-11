@@ -917,54 +917,54 @@ def main(
                 if conserve_memory
                 else dict()
             )
+            if args.retain_rate:
+                sampled = sample(retain_rate_samples, 10)
+                # query_inputs, sampled_targets = [x['requested_rewrite']['prompt'].format(x['requested_rewrite']['subject']) for x in sampled], [x['requested_rewrite']['target_true']['str'] for x in sampled]
+                # query_inputs, sampled_targets = [DEFAULT_IMAGE_TOKEN + "\n" + "Answer the question in one word:\n Question: {} Answer:".format(x["src"]) for x in sampled], [x["pred"] for x in sampled]
+                query_inputs, sampled_targets, image_ids = ["Answer the question in one word:\n Question: {} Answer:".format(x["src"]) for x in sampled], [x["pred"] for x in sampled], [x["image_id"] for x in sampled] 
+                # query_inputs, sampled_targets, image_ids = [sys_prompt.format("Describe the image") for x in sampled], [x["pred"] for x in sampled], [x["image_id"] for x in sampled] 
+                
+                # query_inputs, sampled_targets = [sys_prompt.format("Describe the image")], [x["pred"] for x in sampled]
+                
+                batch = simple_make_inputs(tok, query_inputs, image_processor, image_ids, model)
+                batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                pad_token_id = 0
+                outputs = [model.generate(**batches[i], do_sample=False, max_new_tokens=36,
+                                  pad_token_id=0)[0] for i in range(len(batch["input_ids"]))]
+                outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
+                
+                preds = tok.batch_decode(outputs, skip_special_tokens=True)
+                preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]
 
-            sampled = sample(retain_rate_samples, 10)
-            # query_inputs, sampled_targets = [x['requested_rewrite']['prompt'].format(x['requested_rewrite']['subject']) for x in sampled], [x['requested_rewrite']['target_true']['str'] for x in sampled]
-            # query_inputs, sampled_targets = [DEFAULT_IMAGE_TOKEN + "\n" + "Answer the question in one word:\n Question: {} Answer:".format(x["src"]) for x in sampled], [x["pred"] for x in sampled]
-            query_inputs, sampled_targets, image_ids = ["Answer the question in one word:\n Question: {} Answer:".format(x["src"]) for x in sampled], [x["pred"] for x in sampled], [x["image_id"] for x in sampled] 
-            # query_inputs, sampled_targets, image_ids = [sys_prompt.format("Describe the image") for x in sampled], [x["pred"] for x in sampled], [x["image_id"] for x in sampled] 
-            
-            # query_inputs, sampled_targets = [sys_prompt.format("Describe the image")], [x["pred"] for x in sampled]
-            
-            batch = simple_make_inputs(tok, query_inputs, image_processor, image_ids, model)
-            batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
-            pad_token_id = 0
-            outputs = [model.generate(**batches[i], do_sample=False, max_new_tokens=36,
-                                pad_token_id=0)[0] for i in range(len(batch["input_ids"]))]
-            outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
-            
-            preds = tok.batch_decode(outputs, skip_special_tokens=True)
-            preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]
+                retain_rate_pre = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
+                preds_preedit = preds
 
-            retain_rate_pre = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
-            preds_preedit = preds
+                print(query_inputs)
+                print(preds)
+             
+        
+                
+                query_inputs, sampled_targets, image_ids = ["Answer the question in one word:\n Question: {} Answer:".format(record['neighborhood_prompts'][i]['prompt'].replace("nq question: ","")) for i in range(len(record['neighborhood_prompts']))], [record['neighborhood_prompts'][i]['target'] for i in range(len(record['neighborhood_prompts']))],  [request['image_id'] for i in range(len(record['neighborhood_prompts']))]
+                
+                
+                batch = simple_make_inputs(tok, query_inputs, image_processor, image_ids, model)
+                batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                pad_token_id = 0
+                outputs = [model.generate(**batches[i], do_sample=False, max_new_tokens=36,
+                                  pad_token_id=0)[0] for i in range(len(batch["input_ids"]))]
+                outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
+                
+                preds = tok.batch_decode(outputs, skip_special_tokens=True)
+                preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]
 
-            print(query_inputs)
-            print(preds)
-            
-    
-            
-            query_inputs, sampled_targets, image_ids = ["Answer the question in one word:\n Question: {} Answer:".format(record['neighborhood_prompts'][i]['prompt'].replace("nq question: ","")) for i in range(len(record['neighborhood_prompts']))], [record['neighborhood_prompts'][i]['target'] for i in range(len(record['neighborhood_prompts']))],  [request['image_id'] for i in range(len(record['neighborhood_prompts']))]
-            
-            
-            batch = simple_make_inputs(tok, query_inputs, image_processor, image_ids, model)
-            batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
-            pad_token_id = 0
-            outputs = [model.generate(**batches[i], do_sample=False, max_new_tokens=36,
-                                pad_token_id=0)[0] for i in range(len(batch["input_ids"]))]
-            outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
-            
-            preds = tok.batch_decode(outputs, skip_special_tokens=True)
-            preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]
+                # outputs = model.generate(**batch, do_sample=False, max_new_tokens=36,
+                #                   pad_token_id=pad_token_id)
+                # outputs = [list(filter(lambda x: x != pad_token_id, output)) for output in outputs]
+                # preds = [tok.decode(output) for output in outputs]
+                # preds = [pred.replace(query_input, "").strip() for pred, query_input in zip(preds, query_inputs)]
+                retain_rate_neighborhood_pre = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
 
-            # outputs = model.generate(**batch, do_sample=False, max_new_tokens=36,
-            #                   pad_token_id=pad_token_id)
-            # outputs = [list(filter(lambda x: x != pad_token_id, output)) for output in outputs]
-            # preds = [tok.decode(output) for output in outputs]
-            # preds = [pred.replace(query_input, "").strip() for pred, query_input in zip(preds, query_inputs)]
-            retain_rate_neighborhood_pre = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
-
-            preds_preedit_neighborhood = preds
+                preds_preedit_neighborhood = preds
 
             # print(image_ids)
             # print(query_inputs)
