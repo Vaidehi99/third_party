@@ -252,7 +252,7 @@ def simple_make_inputs_image(tokenizer, prompts, image_processor, image_ids, sam
 
 
 
-def make_inputs(tokenizer, image_processor, prompts, image_ids, sample_ids,, model, img_attack_parap, targets=None, device="cuda"):
+def make_inputs(tokenizer, image_processor, prompts, image_ids, sample_ids, model, img_attack_parap, targets=None, device="cuda"):
     # prompts = [sys_prompt.format(p) for p in prompts]
 
     # make tensor inputs for pytorch model with right-padding
