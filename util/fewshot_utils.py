@@ -72,15 +72,16 @@ def get_image_path(image_id):
     img_path = "/data1/TxPLM/okvqa/train2014/{}.jpg".format(str(image_id).zfill(12))
   return img_path
 
-def get_image_path_parap(image_id, img_attack_parap):
+def get_image_path_parap(image_id, sample_id, img_attack_parap):
     img_path_orig = get_image_path(image_id)
-    img_path_easy = "/nas-ssd2/vaidehi/nlp13/data/images/{}.jpg".format(str(image_id).zfill(12))
-    img_path_medium = "/nas-ssd2/vaidehi/MMMEdit/data/okvqa/parap_images_medium/{}.jpg".format(str(image_id))
-    img2id = json.load(open("data/img2id.json","r"))
+    img_path_easy = "data/parap_images/okvqa/{}.jpg".format(sample_id)
+    img_path_medium = "data/parap_images_medium/okvqa/{}.jpg".format(sample_id)
+    img_path_hard = "data/paraphrase_images_hard/okvqa_yolo_dino_bert/processed_images/{}.jpg".format(sample_id)
+    # img2id = json.load(open("/nas-ssd2/vaidehi/nlp13/belief-localization/third_party/data/img2id.json","r"))
     
     if img_attack_parap=="hard":
-      img_path_hard = "/nas-ssd2/vaidehi/MMMEdit/data/okvqa/parap_images_hard/outputs_yolo_dino/processed_images/{}.jpg".format(img2id[str(image_id)])
       if not os.path.exists(img_path_hard):
+        # raise AssertionError
         img_path_hard = img_path_easy
       attack_images = [img_path_orig, img_path_easy, img_path_medium, img_path_hard]
     elif img_attack_parap=="medium":
@@ -91,6 +92,7 @@ def get_image_path_parap(image_id, img_attack_parap):
       attack_images = [img_path_orig, img_path_easy]
     elif img_attack_parap=="hard_only":
       if not os.path.exists(img_path_hard):
+        # raise AssertionError
         img_path_hard = img_path_easy
       attack_images = [img_path_hard]
     elif img_attack_parap=="medium_only":
