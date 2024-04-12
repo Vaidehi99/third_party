@@ -203,7 +203,7 @@ def test_batch_prediction(
     sample_ids = [sample_id]*len(repeated_prefixes)
 
 
-    batch = make_inputs(tok, image_processor, repeated_prefixes, image_ids, sample_ids, model, args.img_attack_parap, targets)    
+    batch = make_inputs(tok, image_processor, repeated_prefixes, image_ids, sample_ids, model, "orig", targets)    
 
     # import pdb; pdb.set_trace()
     with nethook.TraceDict(model, [embed_layername], edit_output=noise_embeddings) if args.fact_forcing or args.weight_based_tracing else nullcontext():
@@ -269,7 +269,7 @@ def test_batch_prediction_image(
     repeated_prefixes = list(itertools.chain(*[[prefix, prefix] for prefix in prefixes]))
     # print(repeated_prefixes)
     # image_ids = [image_id]*len(repeated_prefixes)
-    batch = make_inputs_image(tok, image_processor, repeated_prefixes, image_id, sample_id, model, args.img_attack_parap, targets)    
+    batch = make_inputs_image(tok, image_processor, repeated_prefixes, image_id, sample_id, model, "orig", targets)    
     with nethook.TraceDict(model, [embed_layername], edit_output=noise_embeddings) if args.fact_forcing or args.weight_based_tracing else nullcontext():
         results = score_from_batch(model, batch, return_log_probs=True)
         nll = -results

@@ -1503,7 +1503,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--model_name",
-        choices=["liuhaotian/llava-v1.5-13b", "liuhaotian/llava-v1.5-7b", "meta-llama/Llama-2-13b-hf", "meta-llama/Llama-2-7b-hf", "huggyllama/llama-7b", "gpt2-medium", "gpt2-large", "gpt2-xl", "EleutherAI/gpt-j-6B", "/playpen-ssd/vaidehi/belief-localization/third_party/gpt-j-6B"],
+        choices=["liuhaotian/llava-v1.6-vicuna-7b", "liuhaotian/llava-v1.5-13b", "liuhaotian/llava-v1.5-7b", "meta-llama/Llama-2-13b-hf", "meta-llama/Llama-2-7b-hf", "huggyllama/llama-7b", "gpt2-medium", "gpt2-large", "gpt2-xl", "EleutherAI/gpt-j-6B", "/playpen-ssd/vaidehi/belief-localization/third_party/gpt-j-6B"],
         default="gpt2-xl",
         help="Model to edit.",
         required=True,
