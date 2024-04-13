@@ -2,8 +2,8 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-08 15:12:07
- # @FilePath: /third_party/scripts/mit_server_g2.sh
+ # @LastEditTime: 2024-04-14 00:42:17
+ # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
  # Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
@@ -46,14 +46,30 @@ layers_wb_attack="22,23,24,25,26,27,28,29,30,31,32"
 #     --skip_generation_tests
 # "
 
+# layers_wb_attack="25,29,30,31,32"
+layers_wb_attack="36,37,38,39,40"
+margin_layers="22 23 24 25 26 27 28 29 30 31 32"
+
+
+
+linx="9 14 19 24 28"
+lrs="1e-1"
+epochs="10 20 30"
+
+for ep in $epochs
+do
+for lr in $lrs
+do
+for li in $linx
+do
 args=" 
-    -n 600
+    -n 10
     --alg_name FT
     --window_sizes 1
     --ds_name zsre
-    --model_name liuhaotian/llava-v1.5-7b
+    --model_name liuhaotian/llava-v1.5-13b
     --run 1
-    --edit_layer 7
+    --edit_layer $li
     --correctness_filter 1
     --norm_constraint 1e-4
     --kl_factor 1
@@ -61,13 +77,21 @@ args="
     --overwrite 
     --retain_rate 
     --skip_generation_tests 
-    --num_attack_parap 4
-    --bb_num_samples 5
-    --attack jailbreak
+    --attack hp 
     --img_attack_parap orig 
-    --cft_edit
-    --fact_erasure
-    --do_essence_tests 0
+    --lft_edit 
+    --fact_erasure 
+    --use_img_token 
+    --debug 
+    --layers_wb_attack $layers_wb_attack
+     --k 4 
+     --epoch $ep
+     --fact_erasure 
+     --lora_lr $lr
+     --use_img_token
 "
 
-CUDA_VISIBLE_DEVICES="2" python -m experiments.evaluate_llava_mm_parap ${args}
+CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm ${args}
+done
+done
+done

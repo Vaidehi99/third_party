@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-14 00:40:15
+ # @LastEditTime: 2024-04-14 00:42:17
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -53,8 +53,11 @@ margin_layers="22 23 24 25 26 27 28 29 30 31 32"
 
 
 linx="9 14 19 24 28"
-lrs="1e0 5e-1 1e-1 5e-3"
+lrs="1e0"
+epochs="10 20 30"
 
+for ep in $epochs
+do
 for lr in $lrs
 do
 for li in $linx
@@ -82,12 +85,13 @@ args="
     --debug 
     --layers_wb_attack $layers_wb_attack
      --k 4 
-     --epoch 20
+     --epoch $ep
      --fact_erasure 
      --lora_lr $lr
      --use_img_token
 "
 
 CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm ${args}
+done
 done
 done
