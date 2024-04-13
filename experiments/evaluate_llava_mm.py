@@ -1119,7 +1119,7 @@ def main(
                     defense = "fact_erasure"
                 else:
                     defense = "error_injection"
-                lft_data = get_lora_sample_data(request, defense)
+                lft_data = get_lora_sample_data(request)
                 edited_model, weights_copy = easy_fine_tuning(model, tok, image_processor, "orig", defense, sample_data=lft_data, image_folder=".", learning_rate=args.lora_lr, num_train_epochs=args.epoch, margin_loss=args.margin_loss, entropy_loss=args.entropy_loss, edit_vision=args.edit_vision, bf16=False)
                       
 
