@@ -65,7 +65,6 @@ class ModelArguments:
     mm_use_im_start_end: bool = field(default=False)
     mm_use_im_patch_token: bool = field(default=True)
     mm_vision_select_feature: Optional[str] = field(default="patch")
-    mm_patch_merge_type: Optional[str] = field(default='flat')
     
 
 
@@ -107,9 +106,9 @@ class TrainingArguments(transformers.TrainingArguments):
         metadata={"help": "How many bits to use."}
     )
     lora_enable: bool = False
-    lora_r: int = 2
-    lora_alpha: int = 6
-    lora_dropout: float = 0.05
+    lora_r: int = 1
+    lora_alpha: int = 1
+    lora_dropout: float = 0 #0.05
     lora_weight_path: str = ""
     lora_bias: str = "none"
     mm_projector_lr: Optional[float] = None
@@ -999,8 +998,10 @@ def test_on_one_sample(model, compute_dtype):
         
         generate_ids = model.generate(
             input_ids=input_ids,
+            do_sample=True,
             images=img,
             max_new_tokens=512,
+            num_return_sequences=10
         )
         
         logits = model(
@@ -1205,7 +1206,7 @@ def easy_fine_tuning(
     #     model, match_prefixes=["model.layers."], layers=[18],
     # )
 
-    lora_finetuning_modules = ["model.layers.7.mlp.down_proj"]
+    lora_finetuning_modules = ["model.layers.7.mlp.down_proj", "model.layers.8.mlp.down_proj", "model.layers.9.mlp.down_proj"]
 
 
 
@@ -1296,9 +1297,9 @@ if __name__ == "__main__":
     if defense == "empty_response":
         print("dummy")
         for i in range(len(sample_data)):
-            sample_data[i]["conversations"][1]["value"] = "dummy"
+            sample_data[i]["conversations"][1]["value"] = "Dummy"
 
-    
+    print(sample_data)
     # check original output
     test_on_one_sample(model, torch.float16)
 
@@ -1314,7 +1315,7 @@ if __name__ == "__main__":
         defense,
         sample_data, 
         image_folder=".", 
-        learning_rate=2e-4, 
+        learning_rate=1e-2, 
         num_train_epochs=10, 
         bf16=compute_dtype==torch.bfloat16,
     )
@@ -1328,14 +1329,16 @@ if __name__ == "__main__":
     # make sure the output changed
     test_on_one_sample(model, compute_dtype)
 
-def get_lora_sample_data(request):
+def get_lora_sample_data_orig(request, defense):
     print(request)
     data = [{
-            "image": get_image_path(request['image_id']),
+            "image": request['image_id'],
+            "sample_id": request['id'],
             "conversations": [
             {
                 "from": "human",
-                "value": sys_prompt.format(request['prompt'].format(request['subject']))
+                "value": request['prompt'].format(request['subject'])
+                # "value": "<image>\n"+request['prompt'].format(request['subject'])
 
             },
             {
@@ -1344,7 +1347,48 @@ def get_lora_sample_data(request):
             },
             ]
         }]
+    if defense == "empty_response":
+        print("dummy")
+        for i in range(len(data)):
+            data[i]["conversations"][1]["value"] = "dummy"
     print(data)
     return data
+
+
+def get_lora_sample_data(request, defense, ques_parap, both_parap):
+    prefixes = ["", "A new study suggests. ", "The following is a. ", "I've always been. ", "The following blog post. "]
+
+    print(request)
+    if not (ques_parap or both_parap):
+        prefixes = prefixes[:1]
+    data = [{
+            "image": request['image_id'],
+            "sample_id": request['id'],
+            "conversations": [
+            {
+                "from": "human",
+                "value": request['prompt'].format(request['subject'])[:43] + prefix + request['prompt'].format(request['subject'])[43:]
+                # "value": "<image>\n"+request['prompt'].format(request['subject'])
+
+            },
+            {
+                "from": "gpt",
+                "value": request['target_new']['str']
+            },
+            ]
+        } for prefix in prefixes]
+    if defense == "empty_response":
+        print("dummy")
+        for i in range(len(data)):
+            data[i]["conversations"][1]["value"] = "dummy"
+    print(data)
+    return data
+
+
+
+
+
+
+
 
 
