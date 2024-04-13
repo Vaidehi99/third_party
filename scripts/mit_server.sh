@@ -64,7 +64,7 @@ args="
     --overwrite 
     --retain_rate 
     --skip_generation_tests 
-    --attack hp 
+    --attack jailbreak 
     --img_attack_parap orig 
     --lft_edit 
     --fact_erasure 
