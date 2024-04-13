@@ -60,7 +60,10 @@ from llava.constants import (
 # from transformer_utils.src.transformer_utils.util.module_utils import get_child_module_by_names
 from transformer_utils.util.module_utils import get_child_module_by_names
 # sys.path.append("/nas-ssd2/vaidehi/nlp13/")
-from lora_ft import easy_fine_tuning, get_lora_sample_data
+# from lora_ft import easy_fine_tuning, get_lora_sample_data
+from lora_ft import get_lora_sample_data
+from lora_ft_old import easy_fine_tuning
+
 
 lora_sample_data = json.load(open("lora_sample.json", "r"))
 
