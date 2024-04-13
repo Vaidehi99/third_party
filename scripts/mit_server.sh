@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-13 14:58:58
+ # @LastEditTime: 2024-04-13 15:08:57
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -72,7 +72,7 @@ args="
     --debug 
     --layers_wb_attack $layers_wb_attack
      --k 4 
-     --epoch 10
+     --epoch 20
      --fact_erasure 
      --lora_lr 5e-1
      --margin_loss 
