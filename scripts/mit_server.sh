@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-13 11:29:45
+ # @LastEditTime: 2024-04-13 12:09:46
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -54,7 +54,7 @@ args="
     --alg_name FT
     --window_sizes 1
     --ds_name zsre
-    --model_name liuhaotian/llava-v1.5-13b
+    --model_name liuhaotian/llava-v1.5-7b
     --run 1
     --edit_layer 9
     --correctness_filter 1
