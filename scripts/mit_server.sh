@@ -49,6 +49,12 @@ layers_wb_attack="22,23,24,25,26,27,28,29,30,31,32"
 layers_wb_attack="25,29,30,31,32"
 margin_layers="22 23 24 25 26 27 28 29 30 31 32"
 
+
+
+linx="9 14 19 24 28"
+
+for li in $linx
+do
 args=" 
     -n 10
     --alg_name FT
@@ -56,7 +62,7 @@ args="
     --ds_name zsre
     --model_name liuhaotian/llava-v1.5-13b
     --run 1
-    --edit_layer 15
+    --edit_layer $li
     --correctness_filter 1
     --norm_constraint 1e-4
     --kl_factor 1
@@ -78,7 +84,7 @@ args="
      --margin_loss 
      --margin_layers $margin_layers
      --use_img_token
-
 "
 
 CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm ${args}
+done
