@@ -74,7 +74,7 @@ args="
      --k 4 
      --epoch 5 
      --fact_erasure 
-     --lora_lr 1e-0 
+     --lora_lr 1e-1
      --margin_loss 
      --margin_layers $margin_layers
      --use_img_token
