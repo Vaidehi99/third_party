@@ -1120,7 +1120,7 @@ def main(
                 else:
                     defense = "error_injection"
                 lft_data = get_lora_sample_data(request)
-                edited_model, weights_copy = easy_fine_tuning(model, tok, image_processor, "orig", defense, sample_data=lft_data, image_folder=".", learning_rate=args.lora_lr, num_train_epochs=args.epoch, bf16=False)
+                edited_model, weights_copy = easy_fine_tuning(model, tok, image_processor, defense, sample_data=lft_data, image_folder=".", learning_rate=args.lora_lr, num_train_epochs=args.epoch, bf16=False)
                       
 
             
