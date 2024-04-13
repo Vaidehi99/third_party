@@ -1355,20 +1355,20 @@ def get_lora_sample_data_orig(request, defense):
     return data
 
 
-def get_lora_sample_data(request, defense, ques_parap, both_parap):
-    prefixes = ["", "A new study suggests. ", "The following is a. ", "I've always been. ", "The following blog post. "]
+def get_lora_sample_data(request, defense):
+    # prefixes = ["", "A new study suggests. ", "The following is a. ", "I've always been. ", "The following blog post. "]
 
     print(request)
-    if not (ques_parap or both_parap):
-        prefixes = prefixes[:1]
+    # if not (ques_parap or both_parap):
+    #     prefixes = prefixes[:1]
     data = [{
             "image": request['image_id'],
             "sample_id": request['id'],
             "conversations": [
             {
                 "from": "human",
-                "value": request['prompt'].format(request['subject'])[:43] + prefix + request['prompt'].format(request['subject'])[43:]
-                # "value": "<image>\n"+request['prompt'].format(request['subject'])
+                # "value": request['prompt'].format(request['subject'])[:43] + prefix + request['prompt'].format(request['subject'])[43:]
+                "value": "<image>\n"+request['prompt'].format(request['subject'])
 
             },
             {
@@ -1376,7 +1376,7 @@ def get_lora_sample_data(request, defense, ques_parap, both_parap):
                 "value": request['target_new']['str']
             },
             ]
-        } for prefix in prefixes]
+        }]
     if defense == "empty_response":
         print("dummy")
         for i in range(len(data)):
