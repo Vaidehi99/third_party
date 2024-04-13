@@ -50,7 +50,7 @@ layers_wb_attack="25,29,30,31,32"
 margin_layers="22 23 24 25 26 27 28 29 30 31 32"
 
 args=" 
-    -n 2
+    -n 10#
     --alg_name FT
     --window_sizes 1
     --ds_name zsre
