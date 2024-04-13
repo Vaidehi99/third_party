@@ -2,8 +2,8 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-14 00:42:17
- # @FilePath: /third_party/scripts/mit_server.sh
+ # @LastEditTime: 2024-04-14 01:23:43
+ # @FilePath: /third_party/scripts/mit_server_g2.sh
  # @Description: 
  # 
  # Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
@@ -48,13 +48,13 @@ layers_wb_attack="22,23,24,25,26,27,28,29,30,31,32"
 
 # layers_wb_attack="25,29,30,31,32"
 layers_wb_attack="36,37,38,39,40"
-margin_layers="22 23 24 25 26 27 28 29 30 31 32"
+margin_layers="30 31 32 33 34 35 36 37 38 39 40"
 
 
 
-linx="9 14 19 24 28"
-lrs="1e-1"
-epochs="10 20 30"
+linx="9"
+lrs="1e-2"
+epochs="6 10 15"
 
 for ep in $epochs
 do
@@ -89,6 +89,8 @@ args="
      --fact_erasure 
      --lora_lr $lr
      --use_img_token
+     --margin_loss 
+    -margin_layers $margin_layers
 "
 
 CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm ${args}
