@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-14 01:26:37
+ # @LastEditTime: 2024-04-14 01:29:51
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -53,7 +53,7 @@ margin_layers="30 31 32 33 34 35 36 37 38 39 40"
 
 
 linx="9"
-lrs="1e-1"
+lrs="1e-2 1e-3 5e-3 1e-4"
 epochs="6 10 15"
 
 for ep in $epochs
