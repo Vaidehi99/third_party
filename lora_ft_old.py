@@ -695,6 +695,7 @@ class LazySupervisedDataset(Dataset):
 
 
     def __getitem__(self, i) -> Dict[str, torch.Tensor]:
+        print(self.list_data_dict[i].keys())
         prompts = [self.list_data_dict[i]['conversations'][0]["value"]]
         image_ids = [self.list_data_dict[i]['image']]
         sample_ids = [self.list_data_dict[i]['sample_id']]
