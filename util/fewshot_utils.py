@@ -98,7 +98,7 @@ def get_image_path_parap(image_id, sample_id, img_attack_parap):
     elif img_attack_parap=="medium_only":
       if not os.path.exists(img_path_medium):
         # print(img_path_medium)
-        raise AssertionError
+        img_path_medium = img_path_easy
       attack_images = [img_path_medium]
     elif img_attack_parap=="easy_only":
       attack_images = [img_path_easy]
