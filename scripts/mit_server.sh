@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-13 10:28:45
+ # @LastEditTime: 2024-04-13 10:38:52
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -46,6 +46,9 @@ layers_wb_attack="22,23,24,25,26,27,28,29,30,31,32"
 #     --skip_generation_tests
 # "
 
+layers_wb_attack="25 29 30 31 32"
+margin_layers="22 23 24 25 26 27 28 29 30 31 32"
+
 args=" 
     -n 10
     --alg_name FT
@@ -67,13 +70,13 @@ args="
     --fact_erasure 
     --use_img_token 
     --debug 
-    --layers_wb_attack 25 29 30 31 32
+    --layers_wb_attack $layers_wb_attack
      --k 4 
      --epoch 5 
      --fact_erasure 
      --lora_lr 3e-2 
      --margin_loss 
-     --margin_layers 22 23 24 25 26 27 28 29 30 31 32 
+     --margin_layers $margin_layers
      --use_img_token
 
 "
