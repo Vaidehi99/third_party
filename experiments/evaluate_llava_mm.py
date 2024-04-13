@@ -1657,6 +1657,10 @@ if __name__ == "__main__":
         num_layers = 32
         # if ds_name == 'zsre':
         #     central_layers = np.setdiff1d(central_layers, [24])
+    if '13b' in model_name:
+        central_layers = list(range(0, 40, 4)) #+ [5, 27]
+        num_layers = 40
+
     if alg_name == 'FT' and 1 in window_sizes and not args.fact_forcing:
         central_layers = [-1] + central_layers
     if args.edit_layer > -2:
