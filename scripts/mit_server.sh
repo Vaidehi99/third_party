@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-13 11:16:18
+ # @LastEditTime: 2024-04-13 11:29:45
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -64,7 +64,7 @@ args="
     --overwrite 
     --retain_rate 
     --skip_generation_tests 
-    --attack jailbreak 
+    --attack hp 
     --img_attack_parap orig 
     --lft_edit 
     --fact_erasure 
@@ -81,4 +81,4 @@ args="
 
 "
 
-CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm_parap ${args}
+CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm ${args}
