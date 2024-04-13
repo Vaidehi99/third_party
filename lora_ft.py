@@ -1368,7 +1368,7 @@ def get_lora_sample_data(request, defense):
             {
                 "from": "human",
                 # "value": request['prompt'].format(request['subject'])[:43] + prefix + request['prompt'].format(request['subject'])[43:]
-                "value": "<image>\n"+request['prompt'].format(request['subject'])
+                "value": request['prompt'].format(request['subject'])
 
             },
             {
