@@ -905,7 +905,7 @@ def main(
                 target_ids = torch.as_tensor(tok.encode(request['target_new']['str']))[1:].view(1, -1).to(device)
                 # target_ids =target_ids[1:] 
                 # print(tok.decode(target_ids))   
-                top_k_pre, bottom_k_pre, top_1_pre, bottom_1_pre, target_prob_pre = get_metrics(model, input_ids, target_ids, args.k, layers_wb_attack)
+                # top_k_pre, bottom_k_pre, top_1_pre, bottom_1_pre, target_prob_pre = get_metrics(model, input_ids, target_ids, args.k, layers_wb_attack)
 
                 # print(top_k_pre, bottom_k_pre, top_1_pre, bottom_1_pre, target_prob_pre)
             
