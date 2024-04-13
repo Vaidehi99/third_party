@@ -1123,8 +1123,7 @@ def main(
                 else:
                     defense = "error_injection"
                 lft_data = get_lora_sample_data(request)
-                edited_model, weights_copy = easy_fine_tuning(model, tok, image_processor, defense, sample_data=lft_data, image_folder=".", learning_rate=args.lora_lr, num_train_epochs=args.epoch, bf16=False)
-                      
+                edited_model, weights_copy = easy_fine_tuning(model, tok, image_processor, "orig", defense, sample_data=lft_data, image_folder=".", learning_rate=args.lora_lr, num_train_epochs=args.epoch, margin_loss=args.margin_loss, entropy_loss=args.entropy_loss, bf16=False)     
 
             
 
@@ -1152,7 +1151,7 @@ def main(
                 #     if p.requires_grad:
                 #         print(n)  
                 with torch.enable_grad():
-                    edited_model, _ = easy_fine_tuning(edited_model, tok, image_processor, "orig", "error_injection", sample_data=lora_sample_data, image_folder=".", learning_rate=args.lora_lr, num_train_epochs=args.epoch, margin_loss=args.margin_loss, entropy_loss=args.entropy_loss,  bf16=False)
+                    edited_model, _ = easy_fine_tuning(model, tok, image_processor, "orig", defense, sample_data=lft_data, image_folder=".", learning_rate=args.lora_lr, num_train_epochs=args.epoch, margin_loss=args.margin_loss, entropy_loss=args.entropy_loss, bf16=False)
                 # print("required+grad_5")                
                 # for n, p in edited_model.named_parameters():
                 #     if p.requires_grad:
