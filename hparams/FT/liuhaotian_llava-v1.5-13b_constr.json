@@ -1,6 +1,6 @@
 {
     "layers": [
-        7
+        9
     ],
     "num_steps": 25,
     "lr": 1e-0,
