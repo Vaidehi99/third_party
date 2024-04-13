@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-13 10:38:52
+ # @LastEditTime: 2024-04-13 10:40:36
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -46,7 +46,7 @@ layers_wb_attack="22,23,24,25,26,27,28,29,30,31,32"
 #     --skip_generation_tests
 # "
 
-layers_wb_attack="25 29 30 31 32"
+layers_wb_attack="25,29,30,31,32"
 margin_layers="22 23 24 25 26 27 28 29 30 31 32"
 
 args=" 
