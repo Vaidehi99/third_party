@@ -1222,7 +1222,7 @@ def main(
                         image_ids = [image_id]*len(attack_paraps)
                         batch = simple_make_inputs(tok, attack_paraps, image_processor, image_ids, model)
 
-                print(attack_paraps)
+                # print(attack_paraps)
                 # exit()
                 pad_token_id = tok.pad_token_id
                 pad_token_id = pad_token_id if pad_token_id else 0
