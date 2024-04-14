@@ -41,7 +41,7 @@ from util.fewshot_utils import get_image_path
 
 
 from PIL import Image
-
+from util.fewshot_utils import make_inputs_lora
 
 local_rank = None
 sys_prompt = "A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions. USER: <image>\n{} ASSISTANT:"
@@ -678,6 +678,14 @@ class LazySupervisedDataset(Dataset):
         return length_list
 
     def __getitem__(self, i) -> Dict[str, torch.Tensor]:
+        print(self.list_data_dict[i].keys())
+        prompts = [self.list_data_dict[i]['conversations'][0]["value"]]
+        image_ids = [self.list_data_dict[i]['image']]
+        sample_ids = [self.list_data_dict[i]['sample_id']]
+        targets = [self.list_data_dict[i]['conversations'][1]["value"]]
+        data_dict = make_inputs_lora(self.tokenizer, self.image_processor, prompts, image_ids, sample_ids, self.model, self.img_attack_parap, targets=targets, device=self.model.device)
+        return data_dict
+        
         sources = self.list_data_dict[i]
         if isinstance(i, int):
             sources = [sources]
@@ -686,6 +694,7 @@ class LazySupervisedDataset(Dataset):
             image_file = self.list_data_dict[i]['image']
             image_folder = self.data_args.image_folder
             processor = self.data_args.image_processor
+            # print(image_file)
             image = Image.open(os.path.join(image_folder, image_file)).convert('RGB')
             if self.data_args.image_aspect_ratio == 'pad':
                 def expand2square(pil_img, background_color):
