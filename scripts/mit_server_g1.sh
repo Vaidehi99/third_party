@@ -81,7 +81,7 @@ args="
     --use_img_token 
      --k 4 
      --epoch 10
-     --lora_lr 5e-2
+     --lora_lr 2e-2
      --margin_loss 
     --margin_layers $margin_layers
 "
