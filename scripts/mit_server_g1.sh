@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-14 21:25:17
+ # @LastEditTime: 2024-04-14 22:00:28
  # @FilePath: /third_party/scripts/mit_server_g1.sh
  # @Description: 
  # 
@@ -81,7 +81,7 @@ args="
     --use_img_token 
      --k 4 
      --epoch 15
-     --lora_lr 1e-2
+     --lora_lr 1e-1
      --margin_loss 
     --margin_layers $margin_layers
 "
