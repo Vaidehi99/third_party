@@ -1044,7 +1044,7 @@ def main(
               elif args.lft_edit:
                 print("Executing edit method: LORA fine-tuning")
                 defense = "empty_response"
-                lft_data = get_lora_sample_data(request)
+                lft_data = get_lora_sample_data(request, defense)
                 edited_model, weights_copy = easy_fine_tuning(model, tok, image_processor, defense, sample_data=lft_data, image_folder=".", learning_rate=1e-3, num_train_epochs=40, bf16=False)
               
 
