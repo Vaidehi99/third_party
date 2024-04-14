@@ -678,13 +678,13 @@ class LazySupervisedDataset(Dataset):
         return length_list
 
     def __getitem__(self, i) -> Dict[str, torch.Tensor]:
-        print(self.list_data_dict[i].keys())
-        prompts = [self.list_data_dict[i]['conversations'][0]["value"]]
-        image_ids = [self.list_data_dict[i]['image']]
-        sample_ids = [self.list_data_dict[i]['sample_id']]
-        targets = [self.list_data_dict[i]['conversations'][1]["value"]]
-        data_dict = make_inputs_lora(self.tokenizer, self.image_processor, prompts, image_ids, sample_ids, self.model, self.img_attack_parap, targets=targets, device=self.model.device)
-        return data_dict
+        # print(self.list_data_dict[i].keys())
+        # prompts = [self.list_data_dict[i]['conversations'][0]["value"]]
+        # image_ids = [self.list_data_dict[i]['image']]
+        # sample_ids = [self.list_data_dict[i]['sample_id']]
+        # targets = [self.list_data_dict[i]['conversations'][1]["value"]]
+        # data_dict = make_inputs_lora(self.tokenizer, self.image_processor, prompts, image_ids, sample_ids, self.model, self.img_attack_parap, targets=targets, device=self.model.device)
+        # return data_dict
         
         sources = self.list_data_dict[i]
         if isinstance(i, int):
@@ -695,7 +695,10 @@ class LazySupervisedDataset(Dataset):
             image_folder = self.data_args.image_folder
             processor = self.data_args.image_processor
             # print(image_file)
-            image = Image.open(os.path.join(image_folder, image_file)).convert('RGB')
+            if isinstance(image_file, int):
+                image = Image.open(os.path.join(image_folder, "{}.jpg".format(str(image_file).zfill(12)))).convert('RGB')
+            else:
+                image = Image.open(os.path.join(image_folder, image_file)).convert('RGB')
             if self.data_args.image_aspect_ratio == 'pad':
                 def expand2square(pil_img, background_color):
                     width, height = pil_img.size
