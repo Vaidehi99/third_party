@@ -660,9 +660,7 @@ def score_from_batch(model, batch, return_log_probs=False):
   model_batch = {
       'input_ids' : batch['input_ids'],
       'attention_mask' : batch['attention_mask'],
-      'images': batch['images'],
-      'target_ids': batch['target_ids'],
-      'target_indicators': batch['target_indicators']
+      'images': batch['images']
   }
 
   # pickle.dump(model_batch, open("/nas-ssd2/vaidehi/nlp13/neighborhood/batch1.pkl", "wb"))
