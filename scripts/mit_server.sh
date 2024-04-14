@@ -54,7 +54,7 @@ margin_layers="30 31 32 33 34 35 36 37 38 39 40"
 
 linx="9"
 lrs="1e-2 1e-3 5e-3 1e-4"
-epochs="6 10 15"
+epochs="10 15"
 
 for ep in $epochs
 do
