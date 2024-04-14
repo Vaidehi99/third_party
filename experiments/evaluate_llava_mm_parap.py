@@ -1045,7 +1045,7 @@ def main(
                 print("Executing edit method: LORA fine-tuning")
                 defense = "empty_response"
                 lft_data = get_lora_sample_data(request, defense)
-                edited_model, weights_copy = easy_fine_tuning(model, tok, image_processor, defense, sample_data=lft_data, image_folder=".", learning_rate=1e-3, num_train_epochs=40, bf16=False)
+                edited_model, weights_copy = easy_fine_tuning(model, tok, image_processor, defense, sample_data=lft_data, image_folder="../okvqa/train2017", learning_rate=1e-3, num_train_epochs=40, bf16=False)
               
 
             #   torch.save(model.state_dict(), "/nas-ssd2/vaidehi/MMMEdit/data/model_posteedit.pt")
