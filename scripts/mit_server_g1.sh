@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-14 22:00:28
+ # @LastEditTime: 2024-04-14 22:02:26
  # @FilePath: /third_party/scripts/mit_server_g1.sh
  # @Description: 
  # 
@@ -58,7 +58,7 @@ epochs="10 15"
 
 
 args=" 
-    -n 600
+    -n 1
     --alg_name FT
     --window_sizes 1
     --ds_name zsre
