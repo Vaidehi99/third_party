@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-14 01:23:43
+ # @LastEditTime: 2024-04-14 21:15:02
  # @FilePath: /third_party/scripts/mit_server_g2.sh
  # @Description: 
  # 
@@ -53,15 +53,10 @@ margin_layers="30 31 32 33 34 35 36 37 38 39 40"
 
 
 linx="9"
-lrs="1e-2"
-epochs="6 10 15"
+lrs="1e-2 1e-3 5e-3 1e-4"
+epochs="10 15"
 
-for ep in $epochs
-do
-for lr in $lrs
-do
-for li in $linx
-do
+
 args=" 
     -n 10
     --alg_name FT
@@ -69,7 +64,7 @@ args="
     --ds_name zsre
     --model_name liuhaotian/llava-v1.5-13b
     --run 1
-    --edit_layer $li
+    --edit_layer 9
     --correctness_filter 1
     --norm_constraint 1e-4
     --kl_factor 1
@@ -85,15 +80,12 @@ args="
     --debug 
     --layers_wb_attack $layers_wb_attack
      --k 4 
-     --epoch $ep
+     --epoch 15
      --fact_erasure 
-     --lora_lr $lr
+     --lora_lr 1e-2
      --use_img_token
      --margin_loss 
-    -margin_layers $margin_layers
+    --margin_layers $margin_layers
 "
 
-CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm ${args}
-done
-done
-done
+CUDA_VISIBLE_DEVICES="2" python -m experiments.evaluate_llava_mm ${args}
