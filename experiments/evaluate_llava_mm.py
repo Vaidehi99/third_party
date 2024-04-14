@@ -1346,7 +1346,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--attack",
-        choices=["hp", "pd", "mg"],
+        choices=["hp", "pd", "mg", "jailbreak"],
         default="hp",
         help="attack type",
         required=True,
