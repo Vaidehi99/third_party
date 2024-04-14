@@ -653,7 +653,7 @@ def score_from_batch(model, batch, return_log_probs=False):
   model_batch = {}
   # model_batch['input_ids'] = batch['input_ids'][:,:-1]
   # model_batch['attention_mask'] = batch['attention_mask'][:,:-1]
-  # model_batch['target_ids'] = batch['target_ids'][:,1:]
+  model_batch['target_ids'] = batch['target_ids'][:,1:]
   # model_batch['target_indicators'] = batch['target_indicators'][:,1:]
   # model_batch['images'] = batch['images']
 
