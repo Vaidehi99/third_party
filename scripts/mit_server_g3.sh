@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-16 00:11:06
+ # @LastEditTime: 2024-04-16 00:13:40
  # @FilePath: /third_party/scripts/mit_server_g3.sh
  # @Description: 
  # 
@@ -121,4 +121,4 @@ args="
      --lora_lr 1e-2
 "
 
-CUDA_VISIBLE_DEVICES="2" python -m experiments.evaluate_llava_mm ${args}
+CUDA_VISIBLE_DEVICES="3" python -m experiments.evaluate_llava_mm ${args}
