@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-14 22:18:58
+ # @LastEditTime: 2024-04-15 15:02:45
  # @FilePath: /third_party/scripts/mit_server_g1.sh
  # @Description: 
  # 
@@ -77,13 +77,10 @@ args="
     --attack jailbreak 
     --img_attack_parap orig 
     --lft_edit 
-    --fact_erasure 
-    --use_img_token 
-     --k 4 
      --epoch 10
-     --lora_lr 2e-2
-     --margin_loss 
-    --margin_layers $margin_layers
+     --fact_erasure
+     --lora_lr 1e-1
+     --use_img_token
 "
 
 CUDA_VISIBLE_DEVICES="1" python -m experiments.evaluate_llava_mm_parap ${args}
