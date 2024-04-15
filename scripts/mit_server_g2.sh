@@ -83,4 +83,4 @@ args="
      --use_img_token
 "
 
-CUDA_VISIBLE_DEVICES="1" python -m experiments.evaluate_llava_mm_parap ${args}
+CUDA_VISIBLE_DEVICES="2" python -m experiments.evaluate_llava_mm_parap ${args}
