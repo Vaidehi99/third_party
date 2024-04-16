@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-15 15:02:45
+ # @LastEditTime: 2024-04-16 09:15:29
  # @FilePath: /third_party/scripts/mit_server_g1.sh
  # @Description: 
  # 
@@ -57,6 +57,32 @@ lrs="1e-2 1e-3 5e-3 1e-4"
 epochs="10 15"
 
 
+# args=" 
+#     -n 600
+#     --alg_name FT
+#     --window_sizes 1
+#     --ds_name zsre
+#     --model_name liuhaotian/llava-v1.5-13b
+#     --run 1
+#     --edit_layer 9
+#     --correctness_filter 1
+#     --norm_constraint 1e-4
+#     --kl_factor 1
+#     --fact_token subject_last
+#     --overwrite 
+#     --retain_rate 
+#     --skip_generation_tests 
+#     --num_attack_parap 4
+#     --bb_num_samples 5
+#     --attack jailbreak 
+#     --img_attack_parap orig 
+#     --lft_edit 
+#      --epoch 10
+#      --fact_erasure
+#      --lora_lr 1e-1
+#      --use_img_token
+# "
+
 args=" 
     -n 600
     --alg_name FT
@@ -72,15 +98,16 @@ args="
     --overwrite 
     --retain_rate 
     --skip_generation_tests 
-    --num_attack_parap 4
-    --bb_num_samples 5
-    --attack jailbreak 
+    --attack hp 
     --img_attack_parap orig 
     --lft_edit 
+    --fact_erasure 
+    --use_img_token 
+    --debug 
+    --layers_wb_attack $layers_wb_attack
+     --k 4 
      --epoch 10
-     --fact_erasure
-     --lora_lr 1e-1
-     --use_img_token
+     --lora_lr 5e-4
 "
 
 CUDA_VISIBLE_DEVICES="1" python -m experiments.evaluate_llava_mm_parap ${args}

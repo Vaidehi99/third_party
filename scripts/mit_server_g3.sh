@@ -118,7 +118,7 @@ args="
     --layers_wb_attack $layers_wb_attack
      --k 4 
      --epoch 10
-     --lora_lr 1e-2
+     --lora_lr 1e-3
 "
 
 CUDA_VISIBLE_DEVICES="3" python -m experiments.evaluate_llava_mm ${args}
