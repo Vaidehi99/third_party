@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-16 09:25:31
+ # @LastEditTime: 2024-04-18 00:01:06
  # @FilePath: /third_party/scripts/mit_server_g1.sh
  # @Description: 
  # 
@@ -83,31 +83,78 @@ epochs="10 15"
 #      --use_img_token
 # "
 
-args=" 
-    -n 600
-    --alg_name FT
-    --window_sizes 1
-    --ds_name zsre
-    --model_name liuhaotian/llava-v1.5-13b
-    --run 1
-    --edit_layer 9
-    --correctness_filter 1
-    --norm_constraint 1e-4
-    --kl_factor 1
-    --fact_token subject_last
-    --overwrite 
-    --retain_rate 
-    --skip_generation_tests 
-    --attack hp 
-    --img_attack_parap orig 
-    --lft_edit 
-    --fact_erasure 
-    --use_img_token 
-    --debug 
-    --layers_wb_attack $layers_wb_attack
-     --k 4 
-     --epoch 10
-     --lora_lr 5e-4
-"
 
-CUDA_VISIBLE_DEVICES="1" python -m experiments.evaluate_llava_mm ${args}
+
+# args=" 
+#     -n 600
+#     --alg_name FT
+#     --window_sizes 1
+#     --ds_name zsre
+linx="9 11 13 15 17 19 21 23"
+lrs="1e-2 8e-3 6e-3 5e-3"
+epochs="6 10 15"
+
+for linx in ${linx}; do
+    for lr in ${lrs}; do
+        for epoch in ${epochs}; do
+            args=" 
+                    -n 10
+                    --alg_name FT
+                    --window_sizes 1
+                    --ds_name zsre
+                    --model_name liuhaotian/llava-v1.5-13b
+                    --run 1
+                    --edit_layer $linx
+                    --correctness_filter 1
+                    --norm_constraint 1e-4
+                    --kl_factor 1
+                    --fact_token subject_last
+                    --overwrite 
+                    --retain_rate 
+                    --skip_generation_tests 
+                    --attack hp 
+                    --img_attack_parap orig 
+                    --lft_edit 
+                    --fact_erasure 
+                    --use_img_token 
+                    --debug 
+                    --layers_wb_attack $layers_wb_attack
+                    --k 4 
+                    --epoch $epoch
+                    --lora_lr $lr
+                "
+                CUDA_VISIBLE_DEVICES="1" python -m experiments.evaluate_llava_mm ${args}
+
+            done
+        done
+    done
+
+# exit
+# args=" 
+#     -n 10
+#     --alg_name FT
+#     --window_sizes 1
+#     --ds_name zsre
+#     --model_name liuhaotian/llava-v1.5-13b
+#     --run 1
+#     --edit_layer 9
+#     --correctness_filter 1
+#     --norm_constraint 1e-4
+#     --kl_factor 1
+#     --fact_token subject_last
+#     --overwrite 
+#     --retain_rate 
+#     --skip_generation_tests 
+#     --attack hp 
+#     --img_attack_parap orig 
+#     --lft_edit 
+#     --fact_erasure 
+#     --use_img_token 
+#     --debug 
+#     --layers_wb_attack $layers_wb_attack
+#      --k 4 
+#      --epoch 10
+#      --lora_lr 5e-4
+# "
+
+# CUDA_VISIBLE_DEVICES="1" python -m experiments.evaluate_llava_mm ${args}
