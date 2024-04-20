@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-16 09:15:44
+ # @LastEditTime: 2024-04-20 10:13:57
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -117,8 +117,8 @@ args="
     --debug 
     --layers_wb_attack $layers_wb_attack
      --k 4 
-     --epoch 10
-     --lora_lr 5e-3
+     --epoch 15
+     --lora_lr 8e-3
 "
 
 CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm ${args}
