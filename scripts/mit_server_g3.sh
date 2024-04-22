@@ -123,4 +123,4 @@ args="
     --margin_layers 36 37 38 39 40
 
 "
-CUDA_VISIBLE_DEVICES="1" python -m experiments.evaluate_llava_mm_parap ${args}
+CUDA_VISIBLE_DEVICES="3" python -m experiments.evaluate_llava_mm_parap ${args}
