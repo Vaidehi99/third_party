@@ -52,11 +52,6 @@ margin_layers="30 31 32 33 34 35 36 37 38 39 40"
 
 
 
-linx="9"
-lrs="1e-2 1e-3 5e-3 1e-4"
-epochs="10 15"
-
-
 args=" 
     -n 600
     --alg_name FT
@@ -72,15 +67,19 @@ args="
     --overwrite 
     --retain_rate 
     --skip_generation_tests 
-    --num_attack_parap 4
-    --bb_num_samples 5
-    --attack jailbreak 
-    --img_attack_parap medium_only 
+    --attack jailbreak  
+    --img_attack_parap orig  
     --lft_edit 
-     --epoch 10
-     --fact_erasure
-     --lora_lr 1e-1
-     --use_img_token
+    --fact_erasure 
+    --use_img_token 
+    --debug 
+    --layers_wb_attack $layers_wb_attack
+    --k 4 
+    --epoch 15
+    --lora_lr 8e-3
+    --margin_loss
+    --margin_layers 36 37 38 39 40
+
 "
 
-CUDA_VISIBLE_DEVICES="2" python -m experiments.evaluate_llava_mm_parap ${args}
+CUDA_VISIBLE_DEVICES="1" python -m experiments.evaluate_llava_mm_parap ${args}
