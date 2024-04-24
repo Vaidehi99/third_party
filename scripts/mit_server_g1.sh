@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-24 10:28:20
+ # @LastEditTime: 2024-04-24 10:49:10
  # @FilePath: /third_party/scripts/mit_server_g1.sh
  # @Description: 
  # 
@@ -154,7 +154,7 @@ args="
     --lft_edit 
     --use_img_token 
     --epoch 15
-    --lora_lr 8e-3
+    --lora_lr 1e-2
 "
 
 CUDA_VISIBLE_DEVICES="1" python -m experiments.evaluate_llava_mm_parap ${args}
