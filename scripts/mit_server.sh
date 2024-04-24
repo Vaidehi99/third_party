@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-22 10:57:27
+ # @LastEditTime: 2024-04-24 10:27:03
  # @FilePath: /third_party/scripts/mit_server.sh
  # @Description: 
  # 
@@ -95,7 +95,7 @@ epochs="10 15 20"
 # CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm ${args}
 
 args=" 
-    -n 600
+    -n 10
     --alg_name FT
     --window_sizes 1
     --ds_name zsre
@@ -109,14 +109,12 @@ args="
     --overwrite 
     --retain_rate 
     --skip_generation_tests 
+    --num_attack_parap 4
+    --bb_num_samples 5
     --attack jailbreak  
     --img_attack_parap medium_only 
     --lft_edit 
-    --fact_erasure 
     --use_img_token 
-    --debug 
-    --layers_wb_attack $layers_wb_attack
-     --k 4 
      --epoch 15
      --lora_lr 8e-3
 "
