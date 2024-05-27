@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-05-27 21:20:48
+ # @LastEditTime: 2024-05-27 21:23:14
  # @FilePath: /third_party/scripts/mit_server_g0.sh
  # @Description: 
  # 
@@ -111,10 +111,12 @@ args="
     --skip_generation_tests 
     --num_attack_parap 4
     --bb_num_samples 5
-    --attack mg  
-    --img_attack_parap orig 
-    --cft_edit 
-    --dummy_string
+    --attack jailbreak  
+    --img_attack_parap medium_only  
+    --lft_edit 
+     --epoch 15
+     --lora_lr 8e-3
+     --use_img_token
 "
 
     #  --epoch 15
