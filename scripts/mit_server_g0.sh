@@ -95,7 +95,7 @@ epochs="10 15 20"
 # CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm ${args}
 
 args=" 
-    -n 600
+    -n 10
     --alg_name FT
     --window_sizes 1
     --ds_name zsre
