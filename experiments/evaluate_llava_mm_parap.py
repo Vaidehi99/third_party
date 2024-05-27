@@ -711,19 +711,16 @@ def main(
 
     ds_class, ds_eval_method = DS_DICT[ds_name]
     ds = ds_class(DATA_DIR, size=dataset_size_limit, tok=tok)
+    with open(os.path.join(DATA_DIR, 'valid_ids_manual_filt.json'), 'r') as fp:
+        valid_ids = json.load(fp)
     # Iterate through dataset
     case_ids_exec = []
     for record in tqdm(ds):
         case_id = record["case_id"] if 'case_id' in record else 'known_id'
         case_result_path = os.path.join(run_dir, f"case_{case_id}.json")
         rewrite_this_point = overwrite or not os.path.exists(case_result_path)
-         # skip some weird memory issues
-        # if case_id < 305:
-        #     continue
-        # if not(case_id in valid_ids):
-        #     continue
-        # if case_id == 1517 and ((args.alg_name == "ROME" and args.tracing_reversal) or len(hparams.layers) > 1):
-        #     continue
+        if not(case_id in valid_ids):
+            continue
         if rewrite_this_point:
             print("Starting point: ", case_id)
             # print info for this point
