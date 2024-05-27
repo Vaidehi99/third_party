@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-05-27 17:23:04
+ # @LastEditTime: 2024-05-27 17:23:51
  # @FilePath: /third_party/scripts/mit_server_g0.sh
  # @Description: 
  # 
