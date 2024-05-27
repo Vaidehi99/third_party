@@ -36,6 +36,7 @@ class MENDQADataset:
         data = []
         print("Loading zsre data...")
         for i, record in enumerate(raw):
+            print(record)
             if len(record["loc"])==0:
                 continue
             print(f"loading point {i}", end='\r')
