@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-05-27 21:23:14
+ # @LastEditTime: 2024-05-27 21:28:01
  # @FilePath: /third_party/scripts/mit_server_g0.sh
  # @Description: 
  # 
@@ -101,7 +101,7 @@ args="
     --ds_name zsre
     --model_name liuhaotian/llava-v1.5-7b
     --run 1
-    --edit_layer 7
+    --edit_layer 9
     --correctness_filter 1
     --norm_constraint 1e-4
     --kl_factor 1
@@ -115,7 +115,7 @@ args="
     --img_attack_parap medium_only  
     --lft_edit 
      --epoch 15
-     --lora_lr 8e-3
+     --lora_lr 1e-1
      --use_img_token
 "
 
