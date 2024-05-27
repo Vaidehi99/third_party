@@ -53,7 +53,7 @@ margin_layers="36 37 38 39 40"
 
 
 args=" 
-    -n 10
+    -n 20
     --alg_name FT
     --window_sizes 1
     --ds_name zsre
