@@ -115,7 +115,7 @@ args="
     --img_attack_parap medium_only  
     --lft_edit 
      --epoch 15
-     --lora_lr 1e-2
+     --lora_lr 5e-2
      --use_img_token
 "
 
