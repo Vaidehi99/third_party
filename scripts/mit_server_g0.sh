@@ -2,8 +2,8 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-24 10:27:03
- # @FilePath: /third_party/scripts/mit_server.sh
+ # @LastEditTime: 2024-05-27 17:23:04
+ # @FilePath: /third_party/scripts/mit_server_g0.sh
  # @Description: 
  # 
  # Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
@@ -95,13 +95,13 @@ epochs="10 15 20"
 # CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm ${args}
 
 args=" 
-    -n 10
+    -n 600
     --alg_name FT
     --window_sizes 1
     --ds_name zsre
-    --model_name liuhaotian/llava-v1.5-13b
+    --model_name liuhaotian/llava-v1.5-7b
     --run 1
-    --edit_layer 9
+    --edit_layer 7
     --correctness_filter 1
     --norm_constraint 1e-4
     --kl_factor 1
@@ -111,12 +111,13 @@ args="
     --skip_generation_tests 
     --num_attack_parap 4
     --bb_num_samples 5
-    --attack jailbreak  
-    --img_attack_parap medium_only 
-    --lft_edit 
+    --attack bb  
+    --img_attack_parap orig 
+    --cft_edit 
+    --fact_erasure
     --use_img_token 
-     --epoch 15
-     --lora_lr 8e-3
 "
 
+    #  --epoch 15
+    #  --lora_lr 8e-3
 CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm_parap ${args}
