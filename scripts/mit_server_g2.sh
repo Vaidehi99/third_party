@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-05-27 21:43:29
+ # @LastEditTime: 2024-05-27 21:45:46
  # @FilePath: /third_party/scripts/mit_server_g2.sh
  # @Description: 
  # 
@@ -53,7 +53,7 @@ margin_layers="36 37 38 39 40"
 
 
 args=" 
-    -n 20
+    -n 600
     --alg_name FT
     --window_sizes 1
     --ds_name zsre
