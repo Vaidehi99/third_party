@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-04-24 18:00:21
+ # @LastEditTime: 2024-05-27 21:29:31
  # @FilePath: /third_party/scripts/mit_server_g2.sh
  # @Description: 
  # 
@@ -48,12 +48,12 @@ layers_wb_attack="22,23,24,25,26,27,28,29,30,31,32"
 
 # layers_wb_attack="25,29,30,31,32"
 layers_wb_attack="36,37,38,39,40"
-margin_layers="30 31 32 33 34 35 36 37 38 39 40"
+margin_layers="36 37 38 39 40"
 
 
 
 args=" 
-    -n 600
+    -n 10
     --alg_name FT
     --window_sizes 1
     --ds_name zsre
@@ -67,16 +67,20 @@ args="
     --overwrite 
     --retain_rate 
     --skip_generation_tests 
-    --attack hp  
-    --img_attack_parap orig  
+    --num_attack_parap 4 
+    --bb_num_samples 5
+    --attack jailbreak   
+    --img_attack_parap medium_only   
     --lft_edit 
     --use_img_token 
     --debug 
     --layers_wb_attack $layers_wb_attack
     --k 4 
     --epoch 15
+    --fact_erasure 
     --lora_lr 1e-2
-
+    --margin_loss
+    --margin_layers $margin_layers
 "
 
 CUDA_VISIBLE_DEVICES="2" python -m experiments.evaluate_llava_mm ${args}
