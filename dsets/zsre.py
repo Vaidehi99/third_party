@@ -100,8 +100,8 @@ class MENDQADataset:
             if size is not None and i == size:
                 break
 
-        # self._data = data
-        print(len)
+        self._data = data
+        print(len(data))
 
     def __getitem__(self, item):
         return self._data[item]
