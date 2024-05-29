@@ -95,7 +95,7 @@ epochs="10 15 20"
 # CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm ${args}
 
 args=" 
-    -n 20
+    -n 100
     --alg_name FT
     --window_sizes 1
     --ds_name zsre
@@ -114,9 +114,9 @@ args="
     --attack jailbreak  
     --img_attack_parap medium_only  
     --lft_edit 
-     --epoch 10
-     --lora_lr 5e-2
-     --use_img_token
+    --epoch 10
+    --lora_lr 5e-2
+    --use_img_token
 "
 
     #  --epoch 15
