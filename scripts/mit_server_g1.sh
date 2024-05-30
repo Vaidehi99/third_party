@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-05-27 21:39:43
+ # @LastEditTime: 2024-05-30 15:24:21
  # @FilePath: /third_party/scripts/mit_server_g1.sh
  # @Description: 
  # 
@@ -47,7 +47,7 @@ layers_wb_attack="22,23,24,25,26,27,28,29,30,31,32"
 # "
 
 # layers_wb_attack="25,29,30,31,32"
-layers_wb_attack="36,37,38,39,40"
+layers_wb_attack="26,27,28,29,30,31,32"
 margin_layers="30 31 32 33 34 35 36 37 38 39 40"
 
 
@@ -58,13 +58,13 @@ epochs="10 15"
 
 
 args=" 
-    -n 20
+    -n 4973 
     --alg_name FT
     --window_sizes 1
     --ds_name zsre
     --model_name liuhaotian/llava-v1.5-13b
     --run 1
-    --edit_layer 9
+    --edit_layer 7
     --correctness_filter 1
     --norm_constraint 1e-4
     --kl_factor 1
@@ -72,14 +72,17 @@ args="
     --overwrite 
     --retain_rate 
     --skip_generation_tests 
-    --attack hp 
+    --attack hess 
     --img_attack_parap orig 
     --lft_edit 
-    --epoch 15
-    --lora_lr 1e-1
+    --epoch 7
+    --lora_lr 2e-2
     --layers_wb_attack $layers_wb_attack
     --use_img_token 
     --k 4
+    --neigh_img
+    --neigh_mm
+    --neigh_type em
 "
 
 CUDA_VISIBLE_DEVICES="1" python -m experiments.evaluate_llava_mm ${args}
