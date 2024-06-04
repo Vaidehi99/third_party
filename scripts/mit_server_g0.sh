@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-06-04 09:22:36
+ # @LastEditTime: 2024-06-04 09:24:53
  # @FilePath: /third_party/scripts/mit_server_g0.sh
  # @Description: 
  # 
@@ -95,7 +95,7 @@ epochs="10 15 20"
 # CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm ${args}
 
 args=" 
-    -n 5000
+    -n 50
     --alg_name FT
     --window_sizes 1
     --ds_name zsre
