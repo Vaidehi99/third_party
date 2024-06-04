@@ -1281,7 +1281,7 @@ def main(
                     # "topk_pre_metric_agg": torch.any(top_k_pre==1.0).item(),
                     # "bottomk_pre_metric_agg": torch.any(bottom_k_pre==1.0).item(),
                     # "topk_or_bottomk_pre_metric_agg": torch.any(torch.tensor([torch.any(top_k_pre==1.0), torch.any(bottom_k_pre==1.0)])).item(),
-                    "top1_pre_metric_agg": torch.any(top_1_pre==1.0).item(),
+                    # "top1_pre_metric_agg": torch.any(top_1_pre==1.0).item(),
                     # "bottom1_pre_metric_agg": torch.any(bottom_1_pre==1.0).item(),
                     # "top1_or_bottom1_pre_metric_agg": torch.any(torch.tensor([torch.any(top_1_pre==1.0), torch.any(bottom_1_pre==1.0)])).item(),
                     # "target_prob_pre_agg": torch.max(target_prob_pre).item(),
