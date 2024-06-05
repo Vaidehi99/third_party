@@ -2,7 +2,7 @@
  # @Author: pengjie pengjieb@mail.ustc.edu.cn
  # @Date: 2024-04-04 21:33:17
  # @LastEditors: pengjie pengjieb@mail.ustc.edu.cn
- # @LastEditTime: 2024-06-05 19:37:43
+ # @LastEditTime: 2024-06-06 00:42:37
  # @FilePath: /third_party/scripts/mit_server_g1.sh
  # @Description: 
  # 
@@ -79,7 +79,7 @@ args="
     --lft_edit 
     --fact_erasure
     --use_img_token
-    --epoch 10
+    --epoch 8
     --lora_lr 5e-2
 "
 
