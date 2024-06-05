@@ -121,4 +121,4 @@ args="
 
     #  --epoch 15
     #  --lora_lr 8e-3
-CUDA_VISIBLE_DEVICES="0" python -m experiments.evaluate_llava_mm ${args}
+CUDA_VISIBLE_DEVICES="1" python -m experiments.evaluate_llava_mm ${args}
