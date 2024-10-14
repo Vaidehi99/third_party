@@ -1,21 +1,30 @@
 import torch
 import numpy as np
-from llava.mm_utils import (
-    process_images,
-    tokenizer_image_token,
-    get_model_name_from_path,
-    KeywordsStoppingCriteria,
-)
-from llava.constants import (
-    IMAGE_TOKEN_INDEX,
-    DEFAULT_IMAGE_TOKEN,
-    DEFAULT_IM_START_TOKEN,
-    DEFAULT_IM_END_TOKEN,
-    IMAGE_PLACEHOLDER,
-)
+# from llava.mm_utils import (
+#     process_images,
+#     tokenizer_image_token,
+#     get_model_name_from_path,
+#     KeywordsStoppingCriteria,
+# )
+# from llava.constants import (
+#     IMAGE_TOKEN_INDEX,
+#     DEFAULT_IMAGE_TOKEN,
+#     DEFAULT_IM_START_TOKEN,
+#     DEFAULT_IM_END_TOKEN,
+#     IMAGE_PLACEHOLDER,
+# )
+
 from PIL import Image
 import os
-import json, pickle
+import json, pickle, sys
+
+sys.path.insert(0,"/nas-ssd2/vaidehi/MMMEdit/MoE_LLaVA_lora")
+from moellava.mm_utils import tokenizer_image_token, get_model_name_from_path, KeywordsStoppingCriteria, process_images
+
+# from moellava.mm_utils import tokenizer_image_token
+from moellava.constants import IGNORE_INDEX, IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, \
+    DEFAULT_IM_END_TOKEN, DEFAULT_VIDEO_TOKEN, DEFAULT_VID_START_TOKEN, DEFAULT_VID_END_TOKEN, MAX_IMAGE_LENGTH, \
+    MAX_VIDEO_LENGTH
 
 sys_prompt = "A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions. USER: <image>\n{} ASSISTANT:"
 
@@ -247,8 +256,6 @@ def simple_make_inputs(tokenizer, prompts, image_processor, image_ids, model, de
 
 
 
-
-
     assert (images_tensor.shape[0]==len(input_ids))
     # images_tensor = images_tensor.expand(torch.tensor(input_ids).shape[0], -1, -1, -1)
     return dict(
@@ -350,15 +357,12 @@ def simple_make_inputs_old(tokenizer, prompts, image_processor, image_id, model,
     ).to(model.device, dtype=torch.float16)
     images_tensor = images_tensor.expand(torch.tensor(input_ids).shape[0], -1, -1, -1)
 
-    image_sizes = [img.size for img in images]
-
     
 
     return dict(
         input_ids=torch.tensor(input_ids).to(device),
         attention_mask=torch.tensor(attention_mask).to(device),
-        images = images_tensor,
-        image_sizes = image_sizes
+        images = images_tensor
     )
 
 def simple_make_inputs_image(tokenizer, prompts, image_processor, image_ids, sample_ids, model, img_attack_parap, device="cuda"):
@@ -428,7 +432,6 @@ def make_inputs(tokenizer, image_processor, prompts, image_ids, sample_ids, mode
     # print(prompts[i]+tokenizer.decode(tokenizer.encode(targets[i], add_special_tokens=False)[:-1]))
     # print(len(prompts))
     # print(tokenizer.encode(targets[0], add_special_tokens=False))
-    # import pdb; pdb.set_trace();
     prompts = [prompts[i]+tokenizer.decode(tokenizer.encode(targets[i], add_special_tokens=False)[:-1]) for i in range(len(prompts))]
     # print(prompts)
     # print(targets)

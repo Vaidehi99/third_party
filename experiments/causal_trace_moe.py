@@ -13,13 +13,13 @@ from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoProcessor
 
 from dsets import KnownsDataset
-from rome.tok_dataset import (
-    TokenizedDataset,
-    dict_to_,
-    flatten_masked_batch,
-    length_collation,
-)
-from util.fewshot_utils import score_from_batch, simple_make_inputs, simple_make_inputs_image
+# from rome.tok_dataset import (
+#     TokenizedDataset,
+#     dict_to_,
+#     flatten_masked_batch,
+#     length_collation,
+# )
+from util.fewshot_utils_moe import score_from_batch, simple_make_inputs, simple_make_inputs_image
 from util import nethook
 from util.globals import DATA_DIR
 from util.runningstats import Covariance, tally
@@ -33,6 +33,7 @@ os.environ['HF_DATASETS_CACHE'] = '/nas-ssd2/vaidehi/MMMEdit/cache/'
 #from llava.model.builder import load_pretrained_model
 #from llava.mm_utils import get_model_name_from_path
 #from llava.eval.run_llava import eval_model
+sys.path.append("/nas-ssd2/vaidehi/MMMEdit/MoE_LLaVA_lora/")
 
 hf_token = "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"
 
@@ -516,18 +517,22 @@ class ModelAndTokenizer:
     ):
         if tokenizer is None:
             assert model_name is not None
-            if "llava" in model_name:
-                print("llava in model name")
-                from llava.model.builder import load_pretrained_model
-                from llava.mm_utils import get_model_name_from_path
-                from llava.eval.run_llava import eval_model
+            if "MoE" in model_name:
+                print("MoE in model name")
+                from moellava.model.builder import load_pretrained_model
+                from moellava.utils import disable_torch_init
+                from moellava.mm_utils import tokenizer_image_token, get_model_name_from_path, KeywordsStoppingCriteria, process_images
+
+                # from llava.model.builder import load_pretrained_model
+                # from llava.mm_utils import get_model_name_from_path
+                # from llava.eval.run_llava import eval_model
                 print(model_name)
                 model_path = model_name #"liuhaotian/llava-v1.5-7b"
                 tokenizer, model, image_processor, context_len = load_pretrained_model(
     model_path=model_path,
     model_base=None,
     model_name=get_model_name_from_path(model_path),
-    # cache_dir = '/nas-ssd2/vaidehi/MMMEdit/cache/'
+    cache_dir = '/nas-ssd2/vaidehi/MMMEdit/cache/'
 )
                 nethook.set_requires_grad(False, model)
                 # model.eval().cuda()
@@ -544,7 +549,7 @@ class ModelAndTokenizer:
             model.eval().cuda()
         self.tokenizer = tokenizer
         self.model = model
-        if "llava" in model_name:
+        if "llava" in model_name or "MoE" in model_name:
             self.image_processor = image_processor #AutoProcessor.from_pretrained("liuhaotian/llava-v1.5-7b")
 
         self.layer_names = [

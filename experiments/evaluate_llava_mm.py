@@ -35,7 +35,7 @@ from experiments.py.eval_utils_zsre import compute_rewrite_quality_zsre
 from rome import ROMEHyperParams, apply_rome_to_model
 from memit import MEMITHyperParams, apply_memit_to_model
 from util import nethook
-from util.fewshot_utils import predict_model, fewshot_accuracy_sum, score_from_batch
+from util.fewshot_utils import predict_model, fewshot_accuracy_sum, score_from_batch, simple_make_inputs_neigh
 from util.generate import generate_fast
 from util.globals import *
 import pickle
@@ -62,9 +62,11 @@ from llava.constants import (
 from transformer_utils.src.transformer_utils.util.module_utils import get_child_module_by_names
 sys.path.append("/nas-ssd2/vaidehi/nlp13/")
 from LORA.lora_ft_old import easy_fine_tuning
+from LORA.lora_ft_pft import easy_fine_tuning_pft
 from LORA.lora_ft import get_lora_sample_data
 
 lora_sample_data = json.load(open("/nas-ssd2/vaidehi/nlp13/LORA/lora_sample.json", "r"))
+prefixes = ["I'm trying out. ", "A man who was. ", "A woman was arrested. ", "A new report says that the US has the. ", "The following is a list of items that make. "]
 
 ALG_DICT = {
     "ROME": (ROMEHyperParams, apply_rome_to_model),
@@ -92,7 +94,7 @@ CODE_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization/third_party'
 BASE_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization'
 MODEL_DIR='/nas-ssd2/vaidehi/MMMEdit/belief-localization/models'
 
-valid_ids = pickle.load(open("/nas-ssd2/vaidehi/nlp13/belief-localization/third_party/data/valid_ids_llava_rome.pkl","rb"))
+valid_ids = json.load(open("/nas-ssd2/vaidehi/nlp13/belief-localization/third_party/data/valid_ids_manual_filt.json","r"))
 retain_rate_samples = json.load(open("/nas-ssd2/vaidehi/nlp13/belief-localization/third_party/data/zsre_mend_eval.json","rb"))
 
 def pad_sequence_to_max_length(sequence, max_length, padding_value=2):
@@ -217,6 +219,12 @@ def get_metrics_debug(model, input_ids, target_ids, k, layers_wb_attack):
     if args.attack == "pd":
         layer_logits = torch.diff(layer_logits, dim=0)
         print("diff")
+    if args.attack == "hess":
+        print("double diff")
+        print(layer_logits.shape)
+        layer_logits = torch.diff(torch.diff(layer_logits, dim=0), dim=0)
+        print(layer_logits.shape)
+
     
     # last_nonzero_mask = torch.remainder(torch.argmin(input_tok["attention_mask"], -1)-1, input_tok["attention_mask"].shape[-1])
     # target_shape = [layer_logits.shape[0],layer_logits.shape[1],1, layer_logits.shape[3]]
@@ -263,7 +271,7 @@ def get_metrics(model, input_ids, target_ids, images_tensor, k, layers_wb_attack
     # exit()
     # logits = model(input_ids, images=images_tensor, output_hidden_states=True).logits
     # pickle.dump(logits, open("/nas-ssd2/vaidehi/nlp13/neighborhood/batch2.pkl", "wb"))
-    print(input_ids.shape)
+    # print(input_ids.shape)
 
     hidden_states = model(input_ids, images=images_tensor, output_hidden_states=True).hidden_states
     # print(hidden_states[0][:, -input_ids.shape[1]:, :].shape)
@@ -287,6 +295,9 @@ def get_metrics(model, input_ids, target_ids, images_tensor, k, layers_wb_attack
     if args.attack == "pd":
         layer_logits = torch.diff(layer_logits, dim=0)
         print("diff")
+    if args.attack == "hess":
+        print("double diff")
+        layer_logits = torch.diff(torch.diff(layer_logits, dim=0), dim=0)
     
     sorted_layer_logits, _ = torch.sort(layer_logits, -1)
 
@@ -333,8 +344,39 @@ def get_metrics(model, input_ids, target_ids, images_tensor, k, layers_wb_attack
     # print("Metrics computed")
     return top5, bottom5, top1, bottom1, target_prob
 
+def get_acc(tok, query_inputs, image_processor, image_ids, model, sampled_targets):
+                    batch = simple_make_inputs(tok, query_inputs, image_processor, image_ids, model)
+                    batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                    pad_token_id = 0
+                    outputs = [model.generate(**batches[i], do_sample=False, max_new_tokens=36,
+                                   pad_token_id=0)[0] for i in range(len(batch["input_ids"]))]
+                    outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
+                
+                    preds = tok.batch_decode(outputs, skip_special_tokens=True)
+                    preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]
+                    print(preds)
+                    print(sampled_targets)
+                    acc = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
+                    return acc
+
+def get_acc_neigh(tok, query_inputs, image_processor, image_ids, sample_ids, model, sampled_targets, img_attack_parap, neigh_type, neigh_idx):
+                    batch = simple_make_inputs_neigh(tok, query_inputs, image_processor, image_ids, sample_ids, model, img_attack_parap, neigh_type, neigh_idx)
+                    batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                    pad_token_id = 0
+                    outputs = [model.generate(**batches[i], do_sample=True, max_new_tokens=36,
+                                   pad_token_id=0)[0] for i in range(len(batch["input_ids"]))]
+                    outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
+                
+                    preds = tok.batch_decode(outputs, skip_special_tokens=True)
+                    preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]
+                    print(preds)
+                    print(sampled_targets)
+                    retain_rate_pre = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
+                    return retain_rate_pre
+
 def get_metrics_batch(model, batch, target_ids, k, layers_wb_attack):
-    hidden_states = model(**batch, output_hidden_states=True).hidden_states
+    hidden_states = model(**batch, output_hidden_states=True).hidden_states #, image_sizes=torch.tensor([[336, 336]])
+    hidden_states = [hid[:, -batch["input_ids"].shape[1]:, :] for hid in hidden_states]
     out = torch.stack(hidden_states, dim=0)
     lens_decoder = make_decoder(model, decoder_layer_names=['final_layernorm', 'lm_head'])
     decoder_out = lens_decoder(out)
@@ -342,8 +384,15 @@ def get_metrics_batch(model, batch, target_ids, k, layers_wb_attack):
     layers_wb_attack = torch.tensor(layers_wb_attack, device="cuda")
     layer_logits = torch.index_select(layer_logits, 0, layers_wb_attack)  
     if args.attack == "pd":
+        print(layer_logits.shape)
         layer_logits = torch.diff(layer_logits, dim=0)
+        print(layer_logits.shape)
         print("diff")
+    if args.attack == "hess":
+        print("double diff")
+        print(layer_logits.shape)
+        layer_logits = torch.diff(torch.diff(layer_logits, dim=0), dim=0)
+        print(layer_logits.shape)
     sorted_layer_logits, _ = torch.sort(layer_logits, -1)
     min_topk_prob = sorted_layer_logits[:,0,-1,-k]
     max_bottomk_prob = sorted_layer_logits[:,0,-1,(k-1)]
@@ -352,11 +401,19 @@ def get_metrics_batch(model, batch, target_ids, k, layers_wb_attack):
     target_prob = layer_logits[:,0,-1,target_ids[0][0]]
     print("target prob")
     print(target_prob)
+ 
+    # print("min_topk_prob")
+    # print(min_topk_prob)
+    # print("max_bottomk_prob")
+    # print(max_bottomk_prob)
+    # print(layer_logits.sum(-1))
+    # print(sorted_layer_logits.sum(-1))
     top5 = torch.ge(target_prob, min_topk_prob)
     bottom5 = torch.ge(max_bottomk_prob, target_prob)
 
     top1 = torch.ge(target_prob, top_prob)
     bottom1 = torch.ge(bottom_prob, target_prob)
+    # print(target_prob[-1])
     # print(min_topk_prob.shape)
     # print(max_bottomk_prob.shape)
     # print(target_prob.shape)
@@ -384,7 +441,7 @@ def get_metrics_batch(model, batch, target_ids, k, layers_wb_attack):
     # print(target_prob)
     # print(bottom5)      
     # print("Metrics computed")
-    return top5, bottom5, top1, bottom1, target_prob
+    return top5, bottom5, top1, bottom1, target_prob, 
 
 
 def get_override_hparams(args, window_size, central_layer, alg_name):
@@ -499,7 +556,7 @@ def sweep_experiment_name(args, model_name, alg_name, ds_name, sweep_params):
   else:
     obj = '_error-inj_{}_'.format(args.attack)
   exp_name = exp_name + obj
-  return f'{exp_name}_n{args.dataset_size_limit}_top-{args.k}_lowrank-{args.low_rank}_lftedit{args.lft_edit}_cftedit{args.cft_edit}_ml{args.margin_loss}_el{args.entropy_loss}_fae{args.ft_after_edit}'
+  return f'{exp_name}_n{args.dataset_size_limit}_top-{args.k}_lowrank-{args.low_rank}_lftedit{args.lft_edit}_cftedit{args.cft_edit}_ml{args.margin_loss}_el{args.entropy_loss}_fae{args.ft_after_edit}_nt{args.neigh_type}'
 
 def ROME_experiment_name(args, model_name, alg_name, ds_name, hparams_to_add):
   exp_name = f'{model_name}/{alg_name}_outputs_{ds_name}'
@@ -529,7 +586,7 @@ def ROME_experiment_name(args, model_name, alg_name, ds_name, hparams_to_add):
   else:
     obj = '_error-inj_{}_'.format(args.attack)
   exp_name = exp_name + obj
-  return f'{exp_name}_n{args.dataset_size_limit}_top-{args.k}_lowrank-{args.low_rank}_lftedit{args.lft_edit}_cftedit{args.cft_edit}_ml{args.margin_loss}_el{args.entropy_loss}_fae{args.ft_after_edit}'
+  return f'{exp_name}_n{args.dataset_size_limit}_top-{args.k}_lowrank-{args.low_rank}_lftedit{args.lft_edit}_cftedit{args.cft_edit}_ml{args.margin_loss}_el{args.entropy_loss}_fae{args.ft_after_edit}_nt{args.neigh_type}'
 
 def ROME_experiment_name_from_override_params(args, model_name, alg_name, ds_name, override_hparams, hparams_class):
   _model_name = model_name.replace('/', '_')
@@ -565,7 +622,7 @@ def make_editing_results_df(exp_name, n, case_ids_exec):
     rewrite_data = record['requested_rewrite']
     prompt = rewrite_data['prompt'].format(rewrite_data['subject'])
     target = rewrite_data['target_true']['str']
-    try:
+    if True:
         record_dict = {
             'case_id': [record['case_id']],
             'prompt': [prompt],
@@ -601,12 +658,19 @@ def make_editing_results_df(exp_name, n, case_ids_exec):
             'retain_rate_neighborhood': [record['retain_rate_neighborhood']],
             'retain_rate_pre': [record['retain_rate_pre']],
             'retain_rate_neighborhood_pre': [record['retain_rate_neighborhood_pre']],
+            'retain_rate_img_neighborhood_pre': [record['retain_rate_img_neighborhood_pre']],
+            'retain_rate_img_neighborhood_post': [record['retain_rate_img_neighborhood_post']],
+            # 'retain_rate_mm_neighborhood_pre': [record['retain_rate_mm_neighborhood_pre']],
+            # 'retain_rate_mm_neighborhood_post': [record['retain_rate_mm_neighborhood_post']],            
             'delta_accuracy': [record['delta_accuracy']],
             'delta_accuracy_neighborhood': [record['delta_accuracy_neighborhood']],
+            'delta_accuracy_img_neighborhood': [record['delta_accuracy_img_neighborhood']],
+            # 'delta_accuracy_mm_neighborhood': [record['delta_accuracy_mm_neighborhood']],            
+
         }
-    except:
-        print("skipping ", case_result_path, " missing basic info")
-        continue
+    # except:
+    #     print("skipping ", case_result_path, " missing basic info")
+    #     continue
     cur_sum = collections.defaultdict(lambda: [])
     data = record
 
@@ -829,9 +893,9 @@ def main(
         case_result_path = os.path.join(run_dir, f"case_{case_id}.json")
         rewrite_this_point = overwrite or not os.path.exists(case_result_path)
          # skip some weird memory issues
-        # if not(case_id in valid_ids):
-        #     continue
-        # if case_id<378:
+        if not(case_id in valid_ids):
+            continue
+        # if case_id<3476:
         #     continue
         # if case_id == 1517 and ((args.alg_name == "ROME" and args.tracing_reversal) or len(hparams.layers) > 1):
         #     continue
@@ -896,7 +960,7 @@ def main(
                 #    max_out_len=100,
                 #)
                 inputs = tok([essence_prompt], padding=True, return_tensors="pt").to(device)#.cuda()#to(next(model.parameters()).device)
-                essence_texts = model.generate(**inputs, max_new_tokens=100, num_return_sequences=5, do_sample=True, top_k=5)
+                essence_texts = model.generate(**inputs, max_new_tokens=100, num_return_sequences=5, do_sample=True, top_k=5, cache_position=None)
                 essence_texts = list(tok.batch_decode(essence_texts, skip_special_tokens=True))
                 # print("essence_texts")
                 # print(essence_texts)
@@ -940,13 +1004,16 @@ def main(
                 # batch = make_inputs(mt.tokenizer, prompts=[prompt] * num_noise_samples, targets=[target_true] * num_noise_samples)
                 request['request_baseline'] = mt.tokenizer.eos_token # arbitrary token, won't use these metrics anyway
                 request['target_new'] = request['target_true']
+       
             elif args.dummy_string:
                 # batch = make_inputs(mt.tokenizer, prompts=[prompt] * num_noise_samples, targets=[target_true] * num_noise_samples)
-                request['request_baseline'] = mt.tokenizer.eos_token
+                # request['request_baseline'] = mt.tokenizer.eos_token
                 # print(request['target_new']["str"])
                 # print(request['target_true']["str"])
                 # request['target_new'] = request['target_true']
-                request['target_new']["str"] = "dummy"
+                request['request_baseline'] = request['target_true']['str']
+                request['target_new'] = request['target_empty']
+                # print(request)
             elif args.fact_amplification:
                 request['request_baseline'] = mt.tokenizer.eos_token # arbitrary token, won't use these metrics anyway
                 request['target_new'] = request['target_true']
@@ -958,6 +1025,8 @@ def main(
                 request['target_new'] = request['target_true']
             else:
                 request['request_baseline'] = request['target_true']['str']
+                # print(request)
+                # exit()
             if verbose:
                 print(" request baseline: ", request['request_baseline'])
 
@@ -1001,7 +1070,7 @@ def main(
                     corrupted_hidden_states = torch.stack([corrupted_hidden_states[layer+1] for layer in hparams.layers], dim=0)
                     # clean forward pass
                     gen_batch = simple_make_inputs(tok, prompts=[prompt])
-                    clean_hidden_states = model(**gen_batch, output_hidden_states=True).hidden_states
+                    clean_hidden_states = model(**gen_batch, output_hidden_states=True, image_size=[336, 336]).hidden_states
                     clean_hidden_states = torch.stack([clean_hidden_states[layer+1] for layer in hparams.layers], dim=0)
                 # splice uncorrupted hidden_states into corrupted_hidden_states where they are restored. automatically broadcast across num_noise_samples dimension
                 hidden_state_supervision = corrupted_hidden_states
@@ -1017,6 +1086,8 @@ def main(
                 # print(tok.batch_decode(model.generate(**batch, do_sample=True, num_return_sequences=5)[:, batch["input_ids"].shape[1]:]))
                 # print(tok.batch_decode(target_ids))
                 top_k_pre, bottom_k_pre, top_1_pre, bottom_1_pre, target_prob_pre = get_metrics_batch(model, batch, target_ids, args.k, layers_wb_attack)
+                print("top_k_pre")
+                print(top_k_pre)
                 # top_k_pre, bottom_k_pre, top_1_pre, bottom_1_pre, target_prob_pre = get_metrics(model, batch["input_ids"], target_ids, batch["images"], args.k, layers_wb_attack)
                 # print(input_ids.shape)
                 # input_ids = tok.encode(["Describe the image"])
@@ -1041,8 +1112,8 @@ def main(
                 # query_inputs, sampled_targets = [DEFAULT_IMAGE_TOKEN + "\n" + "Answer the question in one word:\n Question: {} Answer:".format(x["src"]) for x in sampled], [x["pred"] for x in sampled]
                 query_inputs, sampled_targets, image_ids = ["Answer the question in one word:\n Question: {} Answer:".format(x["src"]) for x in sampled], [x["pred"] for x in sampled], [x["image_id"] for x in sampled] 
                 # query_inputs, sampled_targets, image_ids = [sys_prompt.format("Describe the image") for x in sampled], [x["pred"] for x in sampled], [x["image_id"] for x in sampled] 
-                
-                # query_inputs, sampled_targets = [sys_prompt.format("Describe the image")], [x["pred"] for x in sampled]
+                # print(query_inputs)
+                # query_inputs, sampled_targets = ["Describe the image"]*len(query_inputs), [x["pred"] for x in sampled]
                 
                 batch = simple_make_inputs(tok, query_inputs, image_processor, image_ids, model)
                 batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
@@ -1083,7 +1154,70 @@ def main(
                 retain_rate_neighborhood_pre = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
 
                 preds_preedit_neighborhood = preds
-            
+
+                if args.neigh_img:
+                    targets = [record['alt_ans'][record['neigh_idx'][0]]]
+                    print(targets)
+                    # targets = record['alt_ans'][:3]
+                    # if len(targets) < 3:
+                        # targets += ["dummy"]*(3-len(targets))
+                    query_inputs, sampled_targets, image_ids, sample_ids = [request['prompt'].format(request['subject'])]*20, targets*20,  [request['image_id']],  [request['id']]
+                    retain_rate_img_neighborhood_pre = get_acc_neigh(tok, query_inputs, image_processor, image_ids, sample_ids, model, sampled_targets, args.img_attack_parap, args.neigh_type, record['neigh_idx'])
+                    print("retain_rate_img_neighborhood_pre")
+                    print(retain_rate_img_neighborhood_pre)
+
+                    # batch = simple_make_inputs_neigh(tok, query_inputs, image_processor, image_ids, sample_ids, model, args.img_attack_parap, args.neigh_type)
+                    # batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                    # pad_token_id = 0
+                    # outputs = [model.generate(**batches[i], do_sample=False, max_new_tokens=36,
+                    #               pad_token_id=0, num_return_sequences=1)[0] for i in range(len(batch["input_ids"]))]
+                    # outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
+                
+                    # preds = tok.batch_decode(outputs, skip_special_tokens=True)
+                    # preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]
+                    # print(preds)
+                    # print(sampled_targets)
+                    # retain_rate_img_neighborhood_pre = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
+
+                    # preds_preedit_img_neighborhood = preds
+                    # print("retain_rate_img_neighborhood_pre")
+                    # print(retain_rate_img_neighborhood_pre)
+                    # print(preds_preedit_img_neighborhood)
+                    # print(sampled_targets)
+                    # print(query_inputs)
+                    # print(image_ids)
+                    # exit()
+
+                '''
+                if args.neigh_mm:
+                    targets = record['alt_ans'][:3]
+                    if len(targets) < 3:
+                        targets += ["dummy"]*(3-len(targets))               
+                    prompt_cur = request['prompt'].format(request['subject'])
+                    query_inputs, sampled_targets, image_ids, sample_ids = [prompt_cur[:43] + pref + prompt_cur[43:] for pref in prefixes[:3]], targets*3,  [request['image_id']],  [request['id']]
+                    retain_rate_mm_neighborhood_pre = get_acc_neigh(tok, query_inputs, image_processor, image_ids, sample_ids, model, sampled_targets, args.img_attack_parap, args.neigh_type)
+                    
+                    batch = simple_make_inputs_neigh(tok, query_inputs, image_processor, image_ids, sample_ids, model, args.img_attack_parap, args.neigh_type)
+                    batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                    pad_token_id = 0
+                    outputs = [model.generate(**batches[i], do_sample=False, max_new_tokens=36,
+                                  pad_token_id=0)[0] for i in range(len(batch["input_ids"]))]
+                    outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
+                
+                    preds = tok.batch_decode(outputs, skip_special_tokens=True)
+                    preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]
+                    print(preds)
+                    print(sampled_targets)
+                    retain_rate_mm_neighborhood_pre = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
+
+                    preds_preedit_mm_neighborhood = preds
+                    print("retain_rate_mm_neighborhood_pre")
+                    print(retain_rate_mm_neighborhood_pre)
+                    print(preds_preedit_mm_neighborhood)
+                    print(sampled_targets)
+                    print(query_inputs)
+                    print(image_ids)
+                '''
             # if args.debug:
             #     input_ids = torch.as_tensor(tok.encode(request['prompt'].format(request['subject']))).view(1, -1).to(device)
                 
@@ -1103,6 +1237,8 @@ def main(
             # for n, p in model.named_parameters():
             #         if p.requires_grad:
             #             print(n)
+
+            # torch.save(model.state_dict(), "/nas-ssd2/vaidehi/MMMEdit/data/model_preeedit.pt")
             
             with torch.enable_grad(), nethook.TraceDict(model, [embed_layername], edit_output=noise_embeddings_f) if args.fact_forcing else nullcontext() as td:
             
@@ -1132,16 +1268,33 @@ def main(
 
               elif args.lft_edit:
                 print("Executing edit method: LORA fine-tuning")
+                ques_parap = False
+                both_parap = False
+                if args.rephrase_defense:
+                    ques_parap = True
                 if args.dummy_string:
                     defense = "empty_response"
                 elif args.fact_erasure:
                     defense = "fact_erasure"
                 else:
                     defense = "error_injection"
-                lft_data = get_lora_sample_data(request, defense)
-                edited_model, weights_copy = easy_fine_tuning(model, tok, image_processor, "orig", defense, sample_data=lft_data, image_folder=".", learning_rate=args.lora_lr, num_train_epochs=args.epoch, margin_loss=args.margin_loss, entropy_loss=args.entropy_loss, edit_vision=args.edit_vision, bf16=False)
+                lft_data = get_lora_sample_data(request, defense, ques_parap, both_parap)
+                print("lft_data")
+                print(lft_data)
+                # if args.dummy_string:
+                #     defense = "empty_response"
+                # elif args.fact_erasure:
+                #     defense = "fact_erasure"
+                # else:
+                #     defense = "error_injection"
+                # lft_data = get_lora_sample_data(request, defense)
+                print(args.edit_vision)
+                print(args.edit_mm)
+                edited_model, weights_copy = easy_fine_tuning(model, tok, image_processor, "orig", defense, sample_data=lft_data, image_folder=".", learning_rate=args.lora_lr, num_train_epochs=args.epoch, margin_loss=args.margin_loss, entropy_loss=args.entropy_loss, edit_vision=args.edit_vision, edit_mm=args.edit_mm, lora_enable = args.lora_enable, bf16=False, fp16=False, fp32=True)
                 # edited_model, weights_copy = easy_fine_tuning(model, tok, image_processor, defense, sample_data=lft_data, image_folder=".", learning_rate=2e-4, num_train_epochs=5, bf16=False)
                       
+            # torch.save(model.state_dict(), "/nas-ssd2/vaidehi/MMMEdit/data/model_postedit.pt")
+            # exit()
 
             
 
@@ -1155,6 +1308,15 @@ def main(
             
             if args.ft_after_edit:
                 print("Executing post-edit LORA fine-tuning")
+                if args.neigh_ft:
+                    query_inputs, sampled_targets, image_ids = ["Answer the question in one word:\n Question: {} Answer:".format(record['neighborhood_prompts'][i]['prompt'].replace("nq question: ","")) for i in range(len(record['neighborhood_prompts']))], [record['neighborhood_prompts'][i]['target'] for i in range(len(record['neighborhood_prompts']))],  [request['image_id'] for i in range(len(record['neighborhood_prompts']))]
+                else:
+                    query_inputs = [x['conversations'][0]['value'] for x in lora_sample_data]
+                    image_ids = [x['image'] for x in lora_sample_data]
+                    sampled_targets = [x['conversations'][1]['value'] for x in lora_sample_data]
+                
+                print(get_acc(tok, query_inputs, image_processor, image_ids, model, sampled_targets))
+
                 # defense = "fact_erasure"
                 # if args.fact_erasure:
                 #     defense = "fact_erasure"
@@ -1170,7 +1332,9 @@ def main(
                 #         print(n)
                 print(lora_sample_data)  
                 with torch.enable_grad():
-                    edited_model, _ = easy_fine_tuning(edited_model, tok, image_processor, "orig", "error_injection", sample_data=lora_sample_data, image_folder=".", learning_rate=args.lora_lr, num_train_epochs=args.epoch, margin_loss=args.margin_loss, entropy_loss=args.entropy_loss,  bf16=False)
+                    edited_model, _ = easy_fine_tuning_pft(edited_model, tok, image_processor, "orig", "error_injection", sample_data=lora_sample_data, image_folder=".", learning_rate=9e-6, num_train_epochs=10, margin_loss=args.margin_loss, entropy_loss=args.entropy_loss, edit_vision=args.edit_vision, edit_mm=False, bf16=False)
+
+                print(get_acc(tok, query_inputs, image_processor, image_ids, model, sampled_targets))
                 # print("required+grad_5")                
                 # for n, p in edited_model.named_parameters():
                 #     if p.requires_grad:
@@ -1235,12 +1399,77 @@ def main(
                 retain_rate_neighborhood = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
                 actual_retain_rate_neighborhood = fewshot_accuracy_sum(preds, preds_preedit_neighborhood)/len(preds)
                 
+            if args.neigh_img:
+                    targets = [record['alt_ans'][record['neigh_idx'][0]]]
+                    print(targets)
+                    # targets = record['alt_ans'][:3]
+                    # if len(targets) < 3:
+                        # targets += ["dummy"]*(3-len(targets))
+                    query_inputs, sampled_targets, image_ids, sample_ids = [request['prompt'].format(request['subject'])]*20, targets*20,  [request['image_id']],  [request['id']]
+                    retain_rate_img_neighborhood_post = get_acc_neigh(tok, query_inputs, image_processor, image_ids, sample_ids, model, sampled_targets, args.img_attack_parap, args.neigh_type, record['neigh_idx'])
+                    print("retain_rate_img_neighborhood_post")
+                    print(retain_rate_img_neighborhood_post)
+                    # exit()
+                    '''
+                    targets = record['alt_ans'][:3]
+                    if len(targets) < 3:
+                        targets += ["dummy"]*(3-len(targets))
+                    query_inputs, sampled_targets, image_ids, sample_ids = [request['prompt'].format(request['subject'])]*9, targets*3,  [request['image_id']],  [request['id']]
+                    batch = simple_make_inputs_neigh(tok, query_inputs, image_processor, image_ids, sample_ids, model, args.img_attack_parap, args.neigh_type)
 
+                    batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                    pad_token_id = 0
+                    outputs = [edited_model.generate(**batches[i], do_sample=False, max_new_tokens=36,
+                                  pad_token_id=0)[0] for i in range(len(batch["input_ids"]))]
+                    outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
+                
+                    preds = tok.batch_decode(outputs, skip_special_tokens=True)
+                    preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]
+                    print(preds)
+                    print(sampled_targets)
+                    retain_rate_img_neighborhood_post = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
+
+                    print("retain_rate_img_neighborhood_post")
+                    print(retain_rate_img_neighborhood_post)
+                    # print(preds_preedit_img_neighborhood)
+                    print(sampled_targets)
+                    print(query_inputs)
+                    print(image_ids)
+                    exit()
+                    '''
+            '''
+            if args.neigh_mm:
+                    targets = record['alt_ans'][:3]
+                    if len(targets) < 3:
+                        targets += ["dummy"]*(3-len(targets))               
+                    prompt_cur = request['prompt'].format(request['subject'])
+                    query_inputs, sampled_targets, image_ids, sample_ids = [prompt_cur[:43] + pref + prompt_cur[43:] for pref in prefixes[:3]]*3, targets*3,  [request['image_id']],  [request['id']]
+                    batch = simple_make_inputs_neigh(tok, query_inputs, image_processor, image_ids, sample_ids, model, args.img_attack_parap, args.neigh_type)
+                    batches = [dict(input_ids=batch['input_ids'][i:i+1], attention_mask=batch["attention_mask"][i:i+1], images = batch["images"][i:i+1]) for i in range(len(batch["input_ids"]))]
+                    pad_token_id = 0
+                    outputs = [model.generate(**batches[i], do_sample=False, max_new_tokens=36,
+                                  pad_token_id=0)[0] for i in range(len(batch["input_ids"]))]
+                    outputs = [list(filter(lambda x: (x != pad_token_id and x!=-200), output)) for output in outputs]
+                
+                    preds = tok.batch_decode(outputs, skip_special_tokens=True)
+                    preds = [pred.replace(sys_prompt_pred.format(query_input), "").strip() for pred, query_input in zip(preds, query_inputs)]
+                    print(preds)
+                    print(sampled_targets)
+                    retain_rate_mm_neighborhood_post = fewshot_accuracy_sum(preds, sampled_targets)/len(preds)
+
+                    print("retain_rate_mm_neighborhood_post")
+                    print(retain_rate_mm_neighborhood_post)
+                    print(preds_preedit_mm_neighborhood)
+                    print(sampled_targets)
+                    print(query_inputs)
+                    print(image_ids)
+            '''
             # Execute evaluation suite
             start = time.time()
              
 
             if args.attack == "hp" or "pd":
+              
               with torch.no_grad(): 
                 # input_ids = torch.as_tensor(tok.encode(request['prompt'].format(request['subject']))).view(1, -1).to(device)
                 if args.use_img_token:
@@ -1270,6 +1499,8 @@ def main(
                 # print(tok.decode(target_ids[0]))
                 # exit()
                 top_k, bottom_k, top_1, bottom_1, target_prob = get_metrics_batch(model, batch, target_ids, args.k, layers_wb_attack)                
+                print("top_k_post")
+                print(top_k)
                 # top_k, bottom_k, top_1, bottom_1, target_prob = get_metrics(edited_model, input_ids, target_ids, images_tensor, args.k, layers_wb_attack)
                 # if args.debug:
                 #     print(top_k, bottom_k, top_1, bottom_1, target_prob)
@@ -1310,7 +1541,11 @@ def main(
                     "retain_rate": retain_rate,
                     "retain_rate_neighborhood": retain_rate_neighborhood,
                     "retain_rate_pre" : retain_rate_pre,
-                    "retain_rate_neighborhood_pre" : retain_rate_neighborhood_pre
+                    "retain_rate_neighborhood_pre" : retain_rate_neighborhood_pre,
+                    "retain_rate_img_neighborhood_pre" : retain_rate_img_neighborhood_pre,
+                    "retain_rate_img_neighborhood_post" : retain_rate_img_neighborhood_post,
+                    # "retain_rate_mm_neighborhood_pre" : retain_rate_mm_neighborhood_pre,
+                    # "retain_rate_mm_neighborhood_post" : retain_rate_mm_neighborhood_post,
                 }
                 
                 for k, v in weights_copy.items():
@@ -1324,9 +1559,9 @@ def main(
                 if args.retain_rate:
                     metrics["delta_accuracy"] = metrics["retain_rate_pre"]-metrics["retain_rate"]
                     metrics["delta_accuracy_neighborhood"] = metrics["retain_rate_neighborhood_pre"]-metrics["retain_rate_neighborhood"]
+                    metrics["delta_accuracy_img_neighborhood"] = metrics["retain_rate_img_neighborhood_pre"]-metrics["retain_rate_img_neighborhood_post"]
+                    # metrics["delta_accuracy_mm_neighborhood"] = metrics["retain_rate_mm_neighborhood_pre"]-metrics["retain_rate_mm_neighborhood_post"]
 
-            # print(metrics)
-            # exit()
             print("Evaluation took", time.time() - start)
             # Dump metrics in .json
             with open(case_result_path, "w") as f:
@@ -1359,15 +1594,29 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument(
+        "--neigh_type",
+        choices=["easy", "medium", "hard", "all", "em"],
+        default="all",
+        help="type of negh",
+        required=True,
+    )
+    parser.add_argument(
+        "--rephrase_defense",
+        dest="rephrase_defense",
+        action="store_true",
+        help="Reduce memory usage during evaluation at the cost of a minor slowdown. "
+        "Backs up model weights on CPU instead of GPU.",
+    )
+    parser.add_argument(
         "--model_name",
-        choices=["liuhaotian/llava-v1.5-7b", "meta-llama/Llama-2-13b-hf", "meta-llama/Llama-2-7b-hf", "huggyllama/llama-7b", "gpt2-medium", "gpt2-large", "gpt2-xl", "EleutherAI/gpt-j-6B", "/playpen-ssd/vaidehi/belief-localization/third_party/gpt-j-6B"],
+        choices=["LanguageBind/MoE-LLaVA-Phi2-2.7B-4e", "liuhaotian/llava-v1.6-vicuna-7b", "liuhaotian/llava-v1.5-7b", "meta-llama/Llama-2-13b-hf", "meta-llama/Llama-2-7b-hf", "huggyllama/llama-7b", "gpt2-medium", "gpt2-large", "gpt2-xl", "EleutherAI/gpt-j-6B", "/playpen-ssd/vaidehi/belief-localization/third_party/gpt-j-6B"],
         default="gpt2-xl",
         help="Model to edit.",
         required=True,
     )
     parser.add_argument(
         "--attack",
-        choices=["hp", "pd", "mg"],
+        choices=["hp", "pd", "mg", "hess"],
         default="hp",
         help="attack type",
         required=True,
@@ -1397,12 +1646,27 @@ if __name__ == "__main__":
         help="compute retain rate",
     )
     parser.add_argument(
+        "--lora_enable",
+        action="store_false",
+        help="lora or FT",
+    )
+    parser.add_argument(
         "--ft_after_edit",
         action="store_true",
         help="compute retain rate",
     )
     parser.add_argument(
+        "--neigh_ft",
+        action="store_true",
+        help="compute retain rate",
+    )
+    parser.add_argument(
         "--edit_vision",
+        action="store_true",
+        help="compute retain rate",
+    )
+    parser.add_argument(
+        "--edit_mm",
         action="store_true",
         help="compute retain rate",
     )
@@ -1528,6 +1792,18 @@ if __name__ == "__main__":
         dest="debug",
         action="store_true",
         help="debug",
+    )
+    parser.add_argument(
+        "--neigh_img",
+        dest="neigh_img",
+        action="store_true",
+        help="neigh_img",
+    )
+    parser.add_argument(
+        "--neigh_mm",
+        dest="neigh_mm",
+        action="store_true",
+        help="neigh_mm",
     )
     parser.add_argument(
         "--dummy_string",
@@ -1730,7 +2006,7 @@ if __name__ == "__main__":
     print(f"saving csv at {save_path}...")
     print("results shape: ", results_df.shape)
 
-    metrics = ['post_rewrite_success', 'rewrite_prob_diff', 'rewrite_post_prob', 'rewrite_score', 'post_paraphrase_success', 'paraphrase_prob_diff', 'paraphrase_post_prob', 'paraphrase_score', 'post_neighborhood_success', 'neighborhood_prob_diff', 'neighborhood_score', 'essence_ppl_diff', 'topk_metric_agg', 'bottomk_metric_agg', 'topk_or_bottomk_metric_agg', 'top1_metric_agg', 'bottom1_metric_agg', 'top1_or_bottom1_metric_agg', 'target_prob_agg', 'topk_pre_metric_agg', 'bottomk_pre_metric_agg', 'topk_or_bottomk_pre_metric_agg', 'top1_pre_metric_agg', 'bottom1_pre_metric_agg', 'top1_or_bottom1_pre_metric_agg', 'target_prob_pre_agg', 'retain_rate_neighborhood_pre', 'retain_rate_pre', 'retain_rate_neighborhood', 'retain_rate', 'delta_accuracy', 'delta_accuracy_neighborhood', 'delta_accuracy', 'delta_accuracy_neighborhood', 'retain_rate_neighborhood_pre', 'retain_rate_pre', 'retain_rate_neighborhood', 'retain_rate']
+    metrics = ['post_rewrite_success', 'rewrite_prob_diff', 'rewrite_post_prob', 'rewrite_score', 'post_paraphrase_success', 'paraphrase_prob_diff', 'paraphrase_post_prob', 'paraphrase_score', 'post_neighborhood_success', 'neighborhood_prob_diff', 'neighborhood_score', 'essence_ppl_diff', 'topk_metric_agg', 'bottomk_metric_agg', 'topk_or_bottomk_metric_agg', 'top1_metric_agg', 'bottom1_metric_agg', 'top1_or_bottom1_metric_agg', 'target_prob_agg', 'topk_pre_metric_agg', 'bottomk_pre_metric_agg', 'topk_or_bottomk_pre_metric_agg', 'top1_pre_metric_agg', 'bottom1_pre_metric_agg', 'top1_or_bottom1_pre_metric_agg', 'target_prob_pre_agg', 'retain_rate_neighborhood_pre', 'retain_rate_pre', 'retain_rate_neighborhood', 'retain_rate', 'delta_accuracy', 'delta_accuracy_neighborhood', 'delta_accuracy_img_neighborhood', 'delta_accuracy', 'delta_accuracy_neighborhood', 'delta_accuracy_img_neighborhood', 'delta_accuracy_mm_neighborhood', 'retain_rate_neighborhood_pre', 'retain_rate_pre', 'retain_rate_neighborhood', 'retain_rate', 'retain_rate_img_neighborhood_pre', 'retain_rate_img_neighborhood_post', 'retain_rate_mm_neighborhood_pre', 'retain_rate_mm_neighborhood_post']
     # metrics = ["post_rewrite_acc", "pre_rewrite_acc", "post_paraphrase_acc", "pre_paraphrase_acc", "paraphrase_prompts_correct"]
     # another test code review comment
     if len(window_sizes) == 1 and len(central_layers) == 1:

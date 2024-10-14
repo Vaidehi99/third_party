@@ -37,7 +37,20 @@ csv_path13 = "/nas-ssd2/vaidehi/MMMEdit/belief-localization/results/llava-v1.5-7
 csv_path14 = "/nas-ssd2/vaidehi/MMMEdit/belief-localization/results/llava-v1.5-7b_FT_outputs_zsre_editing_sweep_ws-[1]_layer-7_dummy_bb_img_attack_parap_orig_n600_top-4_lowrank-False_parap_image_lfteditTrue_cfteditFalse_mlFalse_elFalse.csv"
 csv_path15 = "/nas-ssd2/vaidehi/MMMEdit/belief-localization/results/llava-v1.5-7b_FT_outputs_zsre_editing_sweep_ws-[1]_layer-7_dummy_jailbreak_img_attack_parap_orig_n600_top-4_lowrank-False_parap_image_lfteditTrue_cfteditFalse_mlFalse_elFalse.csv"
 
-paths = [globals()["csv_path{}".format(k)] for k in range(1,16,1)]#, csv_path6]
+
+#Input_rephrase
+#lang=attack
+csv_path16 = "/nas-ssd2/vaidehi/MMMEdit/belief-localization/results/llava-v1.5-7b_FT_outputs_zsre_editing_sweep_ws-[1]_layer-7_fact-erasure_bb_img_attack_parap_orig_n600_top-4_lowrank-False_parap_image_lfteditTrue_cfteditFalse_mlFalse_elFalse_faeFalse.csv"
+csv_path17 = "/nas-ssd2/vaidehi/MMMEdit/belief-localization/results/llava-v1.5-7b_FT_outputs_zsre_editing_sweep_ws-[1]_layer-7_fact-erasure_jailbreak_img_attack_parap_orig_n600_top-4_lowrank-False_parap_image_lfteditTrue_cfteditFalse_mlFalse_elFalse_faeFalse.csv"
+csv_path18 = "/nas-ssd2/vaidehi/MMMEdit/belief-localization/results/llava-v1.5-7b_FT_outputs_zsre_editing_sweep_ws-[1]_layer-7_fact-erasure_mg_img_attack_parap_orig_n600_top-4_lowrank-False_parap_image_lfteditTrue_cfteditFalse_mlFalse_elFalse_faeFalse.csv"
+
+#img_tatcl
+csv_path19 = "/nas-ssd2/vaidehi/MMMEdit/belief-localization/results/llava-v1.5-7b_FT_outputs_zsre_editing_sweep_ws-[1]_layer-7_fact-erasure_img_img_attack_parap_medium_only_n600_top-4_lowrank-False_parap_image_lfteditTrue_cfteditFalse_mlFalse_elFalse_faeFalse.csv"
+csv_path20 = "/nas-ssd2/vaidehi/MMMEdit/belief-localization/results/llava-v1.5-7b_FT_outputs_zsre_editing_sweep_ws-[1]_layer-7_fact-erasure_img_img_attack_parap_easy_only_n600_top-4_lowrank-False_parap_image_lfteditTrue_cfteditFalse_mlFalse_elFalse_faeFalse.csv"
+csv_path21 = "/nas-ssd2/vaidehi/MMMEdit/belief-localization/results/llava-v1.5-7b_FT_outputs_zsre_editing_sweep_ws-[1]_layer-7_fact-erasure_img_img_attack_parap_hard_only_n600_top-4_lowrank-False_parap_image_lfteditTrue_cfteditFalse_mlFalse_elFalse_faeFalse.csv"
+
+
+paths = [globals()["csv_path{}".format(k)] for k in range(1,22,1)]#, csv_path6]
 
 
 # paths = ["/nas-ssd2/vaidehi/MMMEdit/belief-localization/results/llava-v1.5-7b_FT_outputs_zsre_editing_sweep_ws-[1]_layer-7_fact-erasure_no_margin_no_entropy_hp__n500_top-4_lowrank-False.csv"]

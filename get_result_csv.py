@@ -32,8 +32,13 @@ csv_path8 = "/nas-ssd2/vaidehi/MMMEdit/belief-localization/results/llava-v1.5-7b
 csv_path9 = "/nas-ssd2/vaidehi/MMMEdit/belief-localization/results/llava-v1.5-7b_FT_outputs_zsre_editing_sweep_ws-[1]_layer-7_error-inj_pd__n600_top-2_lowrank-False_lfteditTrue_cfteditFalse_mlFalse_elFalse.csv"
 csv_path10 = "/nas-ssd2/vaidehi/MMMEdit/belief-localization/results/llava-v1.5-7b_FT_outputs_zsre_editing_sweep_ws-[1]_layer-7_error-inj_hp__n600_top-4_lowrank-False_lfteditTrue_cfteditFalse_mlFalse_elFalse.csv"
 
+#path
+
+csv_path11 = "/nas-ssd2/vaidehi/MMMEdit/belief-localization/results/llava-v1.5-7b_FT_outputs_zsre_editing_sweep_ws-[1]_layer-7_fact-erasure_no_margin_no_entropy_hp__n600_top-4_lowrank-False_lfteditTrue_cfteditFalse_mlFalse_elFalse_faeFalse.csv"
+csv_path12 = "/nas-ssd2/vaidehi/MMMEdit/belief-localization/results/llava-v1.5-7b_FT_outputs_zsre_editing_sweep_ws-[1]_layer-7_fact-erasure_no_margin_no_entropy_pd__n600_top-2_lowrank-False_lfteditTrue_cfteditFalse_mlFalse_elFalse_faeFalse.csv"
+
 paths = [csv_path1, csv_path2, csv_path3, csv_path4]#, csv_path5, csv_path6]
-paths = [globals()["csv_path{}".format(k)] for k in range(1,11,1)]#, csv_path6]
+paths = [globals()["csv_path{}".format(k)] for k in range(1,13,1)]#, csv_path6]
 
 
 

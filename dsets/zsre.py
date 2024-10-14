@@ -36,6 +36,8 @@ class MENDQADataset:
         data = []
         print("Loading zsre data...")
         for i, record in enumerate(raw):
+            if 'subject' not in record or 'neigh_idx' not in record:
+                continue
             if len(record["loc"])==0:
                 continue
             print(f"loading point {i}", end='\r')
@@ -80,8 +82,11 @@ class MENDQADataset:
                         # even though error fixing is a better eval, we compatabilize with CounterFact
                         # by setting the new target to a random entity
                         "target_new": {"str": alt_ans},
-                        "target_true": {"str": true_answer},  
+                        "target_true": {"str": true_answer},
+                        "target_empty": {"str": "I don't know"},  
                     },
+                    "alt_ans": record["alt_ans"],
+                    "neigh_idx": record["neigh_idx"],                    
                     "paraphrase_prompts": [f"Answer the question in one word\n Question: {record['rephrase'][i]} Answer:" for i in range(len(record['rephrase']))],
                     "neighborhood_prompts": [
                         {

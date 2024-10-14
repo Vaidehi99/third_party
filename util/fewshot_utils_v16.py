@@ -239,22 +239,34 @@ def simple_make_inputs(tokenizer, prompts, image_processor, image_ids, model, de
 
     images = load_images(image_files=img_paths)#["/nas-ssd2/dataset/coco2017/train2017/000000357587.jpg"])#"/nas-ssd2/dataset/coco2017/train2017/000000339761.jpg"])#"/nas-ssd2/dataset/coco2017/val2017/000000297147.jpg"])
     # images_tensor = image_processor.preprocess(images, return_tensors='pt')['pixel_values'].half().to(device)
+    print(len(img_paths))
+    print("img_paths")
+    print(image_ids)
     images_tensor = process_images(
         images,
         image_processor,
         model.config
-    ).to(model.device, dtype=torch.float16)
+    )
+    if isinstance(images_tensor, list):
+      print([x.shape for x in images_tensor])
+      images_tensor = torch.cat(images_tensor, dim=0).to(model.device, dtype=torch.float16)
+    else:
+      print(images_tensor.shape)
+      images_tensor = images_tensor.to(model.device, dtype=torch.float16)
 
 
 
-
-
+    print(len(input_ids))
+    print(images_tensor.shape)
     assert (images_tensor.shape[0]==len(input_ids))
+    image_sizes = [img.size for img in images]
+
     # images_tensor = images_tensor.expand(torch.tensor(input_ids).shape[0], -1, -1, -1)
     return dict(
         input_ids=torch.tensor(input_ids).to(device),
         attention_mask=torch.tensor(attention_mask).to(device),
-        images = images_tensor
+        images = images_tensor,
+        image_sizes = image_sizes
     )
 
     # return [dict(
@@ -289,11 +301,14 @@ def simple_make_inputs_neigh(tokenizer, prompts, image_processor, image_ids, sam
 
     images = load_images(image_files=attack_images)#["/nas-ssd2/dataset/coco2017/train2017/000000357587.jpg"])#"/nas-ssd2/dataset/coco2017/train2017/000000339761.jpg"])#"/nas-ssd2/dataset/coco2017/val2017/000000297147.jpg"])
     # images_tensor = image_processor.preprocess(images, return_tensors='pt')['pixel_values'].half().to(device)
+    
     images_tensor = process_images(
         images,
         image_processor,
         model.config
     ).to(model.device, dtype=torch.float16)
+    image_sizes = [img.size for img in images]
+    
     # print(torch.tensor(input_ids).shape)
     # if images_tensor.shape[0]==1:
     #   images_tensor = images_tensor.expand(torch.tensor(input_ids).shape[0], -1, -1, -1)
@@ -315,13 +330,21 @@ def simple_make_inputs_neigh(tokenizer, prompts, image_processor, image_ids, sam
       
         input_ids = [element for i in range(num_images) for element in input_ids]
         attention_mask = [element for i in range(num_images) for element in attention_mask]
+        image_sizes = [element for i in range(num_images) for element in image_sizes]
        
     
     print(images_tensor.shape)
+    print(image_sizes)
+    print(torch.tensor(attention_mask).shape)
+    print(torch.tensor(input_ids).shape)
+
+    exit()
     return dict(
         input_ids=torch.tensor(input_ids).to(device),
         attention_mask=torch.tensor(attention_mask).to(device),
-        images = images_tensor
+        images = images_tensor,        
+        image_sizes = image_sizes
+
     )
 
 
@@ -350,15 +373,12 @@ def simple_make_inputs_old(tokenizer, prompts, image_processor, image_id, model,
     ).to(model.device, dtype=torch.float16)
     images_tensor = images_tensor.expand(torch.tensor(input_ids).shape[0], -1, -1, -1)
 
-    image_sizes = [img.size for img in images]
-
     
 
     return dict(
         input_ids=torch.tensor(input_ids).to(device),
         attention_mask=torch.tensor(attention_mask).to(device),
-        images = images_tensor,
-        image_sizes = image_sizes
+        images = images_tensor
     )
 
 def simple_make_inputs_image(tokenizer, prompts, image_processor, image_ids, sample_ids, model, img_attack_parap, device="cuda"):
@@ -428,7 +448,6 @@ def make_inputs(tokenizer, image_processor, prompts, image_ids, sample_ids, mode
     # print(prompts[i]+tokenizer.decode(tokenizer.encode(targets[i], add_special_tokens=False)[:-1]))
     # print(len(prompts))
     # print(tokenizer.encode(targets[0], add_special_tokens=False))
-    # import pdb; pdb.set_trace();
     prompts = [prompts[i]+tokenizer.decode(tokenizer.encode(targets[i], add_special_tokens=False)[:-1]) for i in range(len(prompts))]
     # print(prompts)
     # print(targets)
