@@ -93,7 +93,7 @@ CUDA_VISIBLE_DEVICES="3" python3 -m experiments.evaluate_llava_mm     -n 4973   
 
 ```
 
-Evaluate Error Injection defense against the PD^2^ Attack
+Evaluate Error Injection defense against the PD^2 Attack
 
 
 ```
