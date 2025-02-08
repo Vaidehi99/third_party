@@ -67,8 +67,9 @@ Set the following parameters for running attacks with the following defenses:
 - `--fact_erasure`, `--entropy_loss`,
 - `--entropy_layers 23 24 25 26 27 28 29 30 31 32`
 #### Input Rephrasing defense
-- `--fact_erasure`, `--rephrase_defense`,
+- `--fact_erasure`, `--rephrase_defense`
 
+#### Other
 - Highest ID in the dataset: `-n`
 ## Commands
 
