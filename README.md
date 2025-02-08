@@ -1,3 +1,40 @@
+# Multimodal Information Deletion: Benchmark and Attack-Defense Evaluation
+
+This repository includes code for the paper:
+
+[Unlearning Sensitive Information in Multimodal LLMs: Benchmark and Attack-Defense Evaluation](https://openreview.net/forum?id=YcnjgKbZQS)
+
+[Vaidehi Patil](https://vaidehi99.github.io/),  [Yi-Lin Sung](https://ylsung.github.io/) ,[Peter Hase](https://peterbhase.github.io/), Jie Peng, [Tianlong Chen](https://tianlong-chen.github.io/) and [Mohit Bansal](https://www.cs.unc.edu/~mbansal/)
+
+
+![image](./assets/overall.jpg)
+
+*Multimodal LLMs (MLLMs) can inadvertently store sensitive information, making them vulnerable to extraction attacks; to address this, we introduce UnLOK-VQA, a benchmark and attack-defense framework for evaluating multimodal unlearning, showing that multimodal attacks are more effective than text-only or image-only attacks, while the best defense reduces attack success rates significantly, with larger models demonstrating greater resilience.*
+
+## Table of Contents
+* [Installation](#installation)
+* [Datasets](#datasets)
+* [Setting parameters](#setting-parameters)
+  * [Defenses](#defenses)
+  * [Attacks](#attacks)
+* [Commands](#commands)
+
+## Installation
+
+For needed packages, first create a conda virtual environment via 
+```
+conda env create -f mmmedit.yml
+```
+and activate it using the following command where $CONDA_PATH is the path to your conda installation
+```
+source $CONDA_PATH/bin/activate mmmedit
+```
+
+Then, install the remaining requirements:
+```
+cd third_party
+python -c "import nltk; nltk.download('punkt')"
+```
 
 
 cd /nas-ssd2/vaidehi/nlp13/belief-localization/third_party
