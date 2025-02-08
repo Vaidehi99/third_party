@@ -33,28 +33,62 @@ source $CONDA_PATH/bin/activate mmmedit
 Then, install the remaining requirements:
 ```
 cd third_party
+pip install -r requirements.txt
 python -c "import nltk; nltk.download('punkt')"
 ```
+## Setting parameters
+
+### Defenses
+Set the following parameters for running attacks with the following defenses:
+#### Fact erasure: 
+- `--fact_erasure`
+#### Empty response
+- `--dummy_string`
+#### Error Injection
+- Neither `--fact_erasure` nor `--dummy_string`
+#### Head Projection defense
+- `--fact_erasure`, `--margin_loss`,
+- `--margin_layers 23 24 25 26 27 28 29 30 31 32` 
+#### Max Entropy defense
+- `--fact_erasure`, `--entropy_loss`,
+- `--entropy_layers 23 24 25 26 27 28 29 30 31 32`
+#### Input Rephrasing defense
+- `--fact_erasure`, `--rephrase_defense`,
+
+## Commands
 
 
-cd /nas-ssd2/vaidehi/nlp13/belief-localization/third_party
-source /nas-ssd2/vaidehi/projects/anaconda3/etc/profile.d/conda.sh
-conda activate MMMEdit_rebuttal
-export PYTHONPATH=/nas-ssd2/vaidehi/projects/LLaVA/cache
-export HF_HOME=cache/
 
+Our experiments involve iterating over the dataset to delete each instance one-by-one from the model, then evaluating it using an attack if the instance has been deleted. The attack success rate is the the percentage of instances in the dataset recovered by the attack
+
+Following are some sample commands for running Head Projection Attack with Error Injection defense, Probability Delta Attack with Head Projection defense and Input Rephrasing Attack with Empty Response defense
+
+Evaluate Fact Erasure defense against the Question Rephrase Attack
+
+```
 CUDA_VISIBLE_DEVICES="7" python3 -m experiments.evaluate_llava_mm_parap     -n 10     --alg_name FT     --window_sizes "1"     --ds_name zsre     --model_name liuhaotian/llava-v1.5-7b --run 1     --edit_layer 7     --correctness_filter 1 --norm_constraint 1e-4     --kl_factor 1     --fact_token subject_last --overwrite --retain_rate --skip_generation_test --num_attack_parap 4 --bb_num_samples 5 --attack bb --img_attack_parap orig --lft_edit --fact_erasure
 
+```
+
+Evaluate Fact Erasure + Question Rephrase defense against the Head Projection Attack
+
+```
 CUDA_VISIBLE_DEVICES="3" python3 -m experiments.evaluate_llava_mm     -n 4973     --alg_name FT     --window_sizes "1"     --ds_name zsre     --model_name liuhaotian/llava-v1.5-7b --run 1     --edit_layer 7     --correctness_filter 1 --norm_constraint 1e-4     --kl_factor 1     --fact_token subject_last --overwrite --retain_rate --skip_generation_test --attack hp --img_attack_parap orig --lft_edit  --fact_erasure --use_img_token --debug --layers_wb_attack "25 29 30 31 32" --k 4 --epoch 10 --lora_lr 9e-3 --neigh_img --neigh_mm --neigh_type em --rephrase_defense
 
+```
+
+Evaluate Error Injection defense against the PD^2^ Attack
 
 
-
-
-
+```
 CUDA_VISIBLE_DEVICES="2" python3 -m experiments.evaluate_llava_mm     -n 10     --alg_name FT     --window_sizes "1"     --ds_name zsre     --model_name liuhaotian/llava-v1.5-7b --run 1     --edit_layer 7     --correctness_filter 1 --norm_constraint 1e-4     --kl_factor 1     --fact_token subject_last --overwrite --retain_rate --skip_generation_test --attack hess --img_attack_parap orig --lft_edit --fact_erasure --use_img_token --debug --layers_wb_attack "26 27 28 29 30 31 32" --k 4 --epoch 3 --lora_lr 2e-2 --neigh_img --neigh_mm --neigh_type em --lft_edit --lora_enable
+```
+
+To run full fine-tuning, add ```--lora_enable``` to the above commands:
 
 
+```
 Full FT: Add  --lora_enable
 
 CUDA_VISIBLE_DEVICES="2" python3 -m experiments.evaluate_llava_mm     -n 10     --alg_name FT     --window_sizes "1"     --ds_name zsre     --model_name liuhaotian/llava-v1.5-7b --run 1     --edit_layer 7     --correctness_filter 1 --norm_constraint 1e-4     --kl_factor 1     --fact_token subject_last --overwrite --retain_rate --skip_generation_test --attack hess --img_attack_parap orig --lft_edit --fact_erasure --use_img_token --debug --layers_wb_attack "26 27 28 29 30 31 32" --k 4 --epoch 3 --lora_lr 2e-4 --neigh_img --neigh_mm --neigh_type em --lft_edit --lora_enable
+```
