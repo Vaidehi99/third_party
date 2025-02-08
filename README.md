@@ -108,3 +108,18 @@ Full FT: Add  --lora_enable
 
 CUDA_VISIBLE_DEVICES="2" python3 -m experiments.evaluate_llava_mm     -n 10     --alg_name FT     --window_sizes "1"     --ds_name zsre     --model_name liuhaotian/llava-v1.5-7b --run 1     --edit_layer 7     --correctness_filter 1 --norm_constraint 1e-4     --kl_factor 1     --fact_token subject_last --overwrite --retain_rate --skip_generation_test --attack hess --img_attack_parap orig --lft_edit --fact_erasure --use_img_token --debug --layers_wb_attack "26 27 28 29 30 31 32" --k 4 --epoch 3 --lora_lr 2e-4 --neigh_img --neigh_mm --neigh_type em --lft_edit --lora_enable
 ```
+
+### Citation
+```
+@article{
+patil2024unlearning,
+title={Unlearning Sensitive Information in Multimodal {LLM}s: Benchmark and Attack-Defense Evaluation},
+author={Vaidehi Patil and Yi-Lin Sung and Peter Hase and Jie Peng and Tianlong Chen and Mohit Bansal},
+journal={Transactions on Machine Learning Research},
+issn={2835-8856},
+year={2024},
+url={https://openreview.net/forum?id=YcnjgKbZQS},
+note={}
+}
+
+```	
