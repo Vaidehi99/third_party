@@ -19,6 +19,18 @@ This repository includes code for the paper:
   * [Attacks](#attacks)
 * [Commands](#commands)
 
+## Dataset: UnLOK-VQA (Unlearning Outside Knowledge VQA)
+Link: 
+The dataset has ~500 entries, each with the following keys:
+"id": ID 
+"src": Question whose answer is to be deleted
+"pred": Answer to the question which is meant to be deleted
+"loc": Neighborhood questions
+"loc_ans": Answers to the neighborhood questions,
+"image_id": Image ID of the image in COCO dataset
+
+To get the Neighborhood Images (Easy, Hard) and Paraphrase Images (Easy, Medium, Hard), see this link.
+
 ## Installation
 
 For needed packages, first create a conda virtual environment via 
