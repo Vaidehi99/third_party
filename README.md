@@ -11,11 +11,7 @@ This repository includes code for the paper:
 
 *Multimodal LLMs (MLLMs) can inadvertently store sensitive information, making them vulnerable to extraction attacks; to address this, we introduce UnLOK-VQA, a benchmark and attack-defense framework for evaluating multimodal unlearning, showing that multimodal attacks are more effective than text-only or image-only attacks, while the best defense reduces attack success rates significantly, with larger models demonstrating greater resilience.*
 
-## Table of Contents
-* [Dataset: UnLOK-VQA (Unlearning Outside Knowledge VQA)](#Dataset: UnLOK-VQA (Unlearning Outside Knowledge VQA))
-* [Installation](#installation)
-* [Setting parameters](#setting-parameters)
-* [Commands](#commands)
+
 
 ## 📊 Dataset: UnLOK-VQA (Unlearning Outside Knowledge VQA)
 
@@ -32,6 +28,10 @@ This dataset contains approximately **500 entries** with the following key attri
 
 To access the **Neighborhood Images** (Easy, Hard) and **Paraphrase Images** (Easy, Medium, Hard), visit the following link: [Neighborhood & Paraphrase Images](#).
 
+## Table of Contents
+* [Installation](#installation)
+* [Setting parameters](#setting-parameters)
+* [Commands](#commands)
 
 ## Installation
 
