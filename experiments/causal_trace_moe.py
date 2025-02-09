@@ -35,7 +35,6 @@ os.environ['HF_DATASETS_CACHE'] = '/nas-ssd2/vaidehi/MMMEdit/cache/'
 #from llava.eval.run_llava import eval_model
 sys.path.append("/nas-ssd2/vaidehi/MMMEdit/MoE_LLaVA_lora/")
 
-hf_token = "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"
 
 def main():
     parser = argparse.ArgumentParser(description="Causal Tracing")
