@@ -15,7 +15,7 @@ This repository includes code for the paper:
 
 ## 📊 Dataset: UnLOK-VQA (Unlearning Outside Knowledge VQA)
 
-**Link**: [Dataset Link](#)
+**Link**: [Dataset Link](https://huggingface.co/datasets/vaidehi99/UnLOK-VQA)
 
 This dataset contains approximately **500 entries** with the following key attributes:
 
